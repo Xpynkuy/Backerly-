@@ -1,7 +1,7 @@
 :root {
-    --font-famaly: "Noto Sans", "sans-serif";
+    --font-family: "Noto Sans", "sans-serif";
     
-    
+    //FONT
     --font-size-s: 16px;
     --font-line-s: 22px;
     --font-s: var(--font-size-s) / var(--font-line-s) var(--font-family);
@@ -17,4 +17,35 @@
     --font-size-xl: 32px;
     --font-line-xl: 40px;
     --font-xl: var(--font-size-xl) / var(--font-line-xl) var(--font-family);
+
+    --font-size-xxl: 40px;
+    --font-line-xxl: 48px;
+    --font-xxl: var(--font-size-xxl) / var(--font-line-xxl) var(--font-family);
+
+    --font-size-extra: 68px;
+    --font-line-extra: 76px;
+    --font-extra: var(--font-size-extra) / var(--font-line-extra) var(--font-family);
+
+
+    //COLOR
+    --primary-color: #7272D1;
+    --accent-color: #FF66CC;
+    --red-color: #ff0000;
+    --gray-color: #E2E8F0;
+    --purple-color: #6992d3;
+
+    //BG COLOR
+    --bg-color-white: #F8F9FF;
+    --bg-color-dark: #131416;
+
+
+    //TEXT COLOR
+    --text-color-black: #000;
+    --text-color-white: #ffff;
+    --text-color-gray: #767a7a;
+
+
+    //BORDER
+    --border-radius: 8px;
+
 }

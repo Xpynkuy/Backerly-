@@ -2,5 +2,14 @@
 @import 'variables.scss';
 @import 'animation.scss';
 
+html {
+    scroll-behavior: smooth;
+}
 
+body {
+    background: var(--bg-color-white);
+    color: var(--text-color-black);
+    margin: 0;
+    padding: 0;
+}
 
