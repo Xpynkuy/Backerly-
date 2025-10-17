@@ -1,0 +1,65 @@
+.btn {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100px;
+    max-width: 300px;
+    padding: 10px;
+    border-radius: var(--border-radius);
+    border: none;
+    color: var(--text-color-white);
+    cursor: pointer;
+
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    // @include animations.hover-opac;
+
+    &--accent {
+        background: var(--accent-color);
+    }
+
+    &--primary {
+        background: var(--primary-color);
+    }
+
+    &--green {
+        background: var(--green-color);
+    }
+
+    &--gray {
+        background: var(--gray-color);
+    }
+
+     &--red {
+        background: var(--red-color);
+    }
+
+
+    &--small {
+        font: var(--font-s);
+        height: 30px;
+        width: 80px;
+    }
+
+    &--medium {
+        font: var(--font-s);
+        height: 40px;
+        width: 100px;
+    }
+
+    &--large {
+        font: var(--font-m);
+        height: 70px;
+        width: 200px;
+    }
+    
+
+    &--full {
+        font: var(--font-l);
+        height: 50px;
+        width: 100%;
+    }
+}
