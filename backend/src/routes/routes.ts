@@ -6,8 +6,7 @@ const router = Router();
 
 router.post("/register", authController.registration);
 router.post("/login", authController.login);
-router.post("/logout", authenticate, (req: Request, res: Response) => {
-  res.json({ message: "Logged out successfully" });
-});
+router.post("/refresh", authController.refresh);
+router.post("/logout", authenticate, authController.logout);
 
 export default router;
