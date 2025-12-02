@@ -1,7 +1,6 @@
 import bcrypt from "bcrypt";
 import prisma from "../config/prisma";
-import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "../config/env";
+import { TokenService } from "./tokenService";
 
 const hashPassword = async (password: string): Promise<string> => {
   const salt = await bcrypt.genSalt(10);
@@ -35,6 +34,41 @@ export const loginUser = async (username: string, password: string) => {
   if (!isMatch) {
     throw new Error("Invalid credentials");
   }
-  const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: "1d" });
-  return { token, user: { id: user.id, username: user.username } };
+
+  const accessToken = TokenService.generateAccessToken({ userId: user.id });
+  const refreshToken = TokenService.generateRefreshToken({ userId: user.id });
+
+  await TokenService.saveRefreshToken(user.id, refreshToken);
+
+  return {
+    accessToken,
+    refreshToken,
+    user: {
+      id: user.id,
+      username: user.username,
+    },
+  };
+};
+
+export const refreshTokens = async (refreshToken: string) => {
+  const storedToken = await TokenService.verifyRefreshToken(refreshToken);
+
+  const newAccessToken = TokenService.generateAccessToken({
+    userId: storedToken.id,
+  });
+  const newRefreshToken = TokenService.generateRefreshToken({
+    userId: storedToken.id,
+  });
+
+  await TokenService.revokeRefreshToken(refreshToken);
+  await TokenService.saveRefreshToken(storedToken.userId, newRefreshToken);
+
+  return {
+    accessToken: newAccessToken,
+    refreshToken: newRefreshToken,
+  };
+};
+
+export const logout = async (refreshToken: string) => {
+  await TokenService.revokeRefreshToken(refreshToken);
 };
