@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
-import { JWT_SECRET } from "../config/env";
+import { JWT_ACCESS_SECRET } from "../config/env";
 
 export const authenticate = (
   req: Request,
@@ -10,7 +10,7 @@ export const authenticate = (
   try {
     const authHeader = req.headers["authorization"];
     console.log("Authorization header:", authHeader);
-    
+
     const token = authHeader && authHeader.split(" ")[1]; // Bearer TOKEN
 
     if (!token) {
@@ -18,12 +18,12 @@ export const authenticate = (
       return res.status(401).json({ error: "Authentication required" });
     }
 
-    if (!JWT_SECRET) {
+    if (!JWT_ACCESS_SECRET) {
       console.error("JWT_SECRET is not configured");
       return res.status(500).json({ error: "Server configuration error" });
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_ACCESS_SECRET);
     (req as any).user = decoded;
     next();
   } catch (error) {
