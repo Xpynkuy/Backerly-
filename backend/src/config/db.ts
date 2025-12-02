@@ -1,6 +1,6 @@
 import prisma from "./prisma";
 
-export async function connentDB() {
+export async function connectDB() {
   try {
     console.log("Попытка подключения к БД");
     await prisma.$connect();
