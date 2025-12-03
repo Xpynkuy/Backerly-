@@ -5,11 +5,12 @@ import { EyeClosed, EyeIcon } from "lucide-react";
 
 interface MyInputProps {
   value?: string;
-  onChange?: (value: string) => void;
+  onChange?: React.ChangeEventHandler<HTMLInputElement>
   placeholder?: string;
   type?: React.HTMLInputTypeAttribute;
   required?: boolean;
   showPasswordToggle?: boolean;
+  name?: string;
 }
 
 const MyInput: FC<MyInputProps> = ({
@@ -19,6 +20,7 @@ const MyInput: FC<MyInputProps> = ({
   type = "text",
   required = false,
   showPasswordToggle = false,
+  name,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -30,9 +32,9 @@ const MyInput: FC<MyInputProps> = ({
       : "password"
     : type;
 
-  const onChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange?.(e.target.value);
-  };
+  // const onChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   onChange?.(e.target.value);
+  // };
 
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
@@ -43,10 +45,11 @@ const MyInput: FC<MyInputProps> = ({
       <input
         className={styles.input}
         value={value}
-        onChange={onChangeHandler}
+        onChange={onChange}
         placeholder={placeholder}
         type={inputType}
         required={required}
+        name={name}
       />
       {shouldShowToggle && (
         <button
