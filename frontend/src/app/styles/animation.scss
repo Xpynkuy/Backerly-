@@ -1,0 +1,6 @@
+@mixin hover-opac ($duration: 0.4s) {
+  transition: $duration ease;
+  &:hover {
+    opacity: 0.8;
+  }
+}
