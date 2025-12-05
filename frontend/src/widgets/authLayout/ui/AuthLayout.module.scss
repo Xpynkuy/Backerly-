@@ -1,0 +1,12 @@
+.wrapper {
+  min-height: 100vh;
+
+  .content {
+    font: var(--font-l);
+    max-width: 800px;
+    width: 100%;
+    flex: 1;
+    margin: 0 auto;
+    padding: 70px 0;
+  }
+}
