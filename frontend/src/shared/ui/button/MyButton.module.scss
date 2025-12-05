@@ -1,3 +1,5 @@
+@use '../../../app/styles/animation.scss' as animation;
+
 .btn {
     display: flex;
     justify-content: center;
@@ -9,6 +11,8 @@
     border: none;
     color: var(--text-color-white);
     cursor: pointer;
+
+  @include animation.hover-opac;
 
     &:disabled {
         opacity: 0.6;
@@ -60,6 +64,6 @@
     &--full {
         font: var(--font-l);
         height: 50px;
-        width: 100%;
+        max-width: 100%;
     }
 }
