@@ -43,5 +43,9 @@
     .nav__btn {
         display: flex;
         gap: 10px;
+
+      .nav__link {
+          text-decoration: none;
+      }
     }
 }
