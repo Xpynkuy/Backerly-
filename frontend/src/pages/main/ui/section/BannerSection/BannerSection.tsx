@@ -1,6 +1,7 @@
-import { Zap } from "lucide-react";
+import {Zap} from "lucide-react";
 import styles from "./BannerSection.module.scss";
 import MyButton from "@shared/ui/button/MyButton";
+import {Link} from "react-router-dom";
 
 const leftImages = [
   "/assets/author-1.AU7h6DGX.webp",
@@ -37,15 +38,23 @@ const BannerSection = () => {
           The best way to earn and connect <br /> with your audience as a
           content creator
         </span>
-        <MyButton size="LARGE">Start Your Page</MyButton>
+        <Link to='/register' className={styles.link}>
+          <MyButton size="LARGE">Start Your Page</MyButton>
+        </Link>
       </div>
       <div className={styles.rightSide}>
         {/* Левая колонка — движение вниз */}
         <div className={styles.leftColumn}>
           <div className={styles.imgTrack}>
             {duplicatedLeft.map((src, index) => (
-              <div className={styles.imgCard} key={`left-${index}`}>
-                <img src={src} alt={`author-${index + 1}`} />
+              <div
+                className={styles.imgCard}
+                key={`left-${index}`}
+              >
+                <img
+                  src={src}
+                  alt={`author-${index + 1}`}
+                />
               </div>
             ))}
           </div>
@@ -55,8 +64,14 @@ const BannerSection = () => {
         <div className={styles.rightColumn}>
           <div className={styles.imgTrack}>
             {duplicatedRight.map((src, index) => (
-              <div className={styles.imgCard} key={`right-${index}`}>
-                <img src={src} alt={`author-${index + 7}`} />
+              <div
+                className={styles.imgCard}
+                key={`right-${index}`}
+              >
+                <img
+                  src={src}
+                  alt={`author-${index + 7}`}
+                />
               </div>
             ))}
           </div>

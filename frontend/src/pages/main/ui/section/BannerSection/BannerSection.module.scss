@@ -18,6 +18,10 @@
     gap: 20px;
     width: 50%;
 
+    .link {
+      text-decoration: none;
+    }
+
     .info {
       font: var(--font-m);
       color: var(--primary-color);
