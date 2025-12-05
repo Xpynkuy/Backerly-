@@ -6,15 +6,17 @@ interface AvatarProps {
   alt?: string;
   size?: string;
   border?: string;
+  radius?: string;
 }
 
 const Avatar = (props: AvatarProps) => {
-  const { src, alt, size, border } = props;
+  const { src, alt, size, border, radius } = props;
 
   const avatarStyles: CSSProperties = {
     width: size || "100px",
     height: size || "100px",
     border: border || "8px",
+    borderRadius: radius || '16px',
   };
 
   return (
