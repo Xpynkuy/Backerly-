@@ -1,7 +1,8 @@
-import {Zap} from "lucide-react";
+import { Zap } from "lucide-react";
 import styles from "./BannerSection.module.scss";
 import MyButton from "@shared/ui/button/MyButton";
-import {Link} from "react-router-dom";
+import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const leftImages = [
   "/assets/author-1.AU7h6DGX.webp",
@@ -24,22 +25,34 @@ const BannerSection = () => {
   const duplicatedLeft = [...leftImages, ...leftImages];
   const duplicatedRight = [...rightImages, ...rightImages];
 
+  const { t } = useTranslation();
+
+  const renderWithLineBreaks = (text: string) => {
+    return text.split("\n").map((line, i) => (
+      <span key={i}>
+        {line}
+        {i < text.split("\n").length - 1 && <br />}
+      </span>
+    ));
+  };
+
   return (
     <section className={styles.section}>
       <div className={styles.leftSide}>
         <div className={styles.info}>
           <Zap size={18} />
-          More than 500,000 creators are here
+          {renderWithLineBreaks(t("banner.creatorsCount"))}
         </div>
         <h1 className={styles.title}>
-          Your talent <br /> is worth money
+          {renderWithLineBreaks(t("banner.title"))}
         </h1>
         <span className={styles.desc}>
-          The best way to earn and connect <br /> with your audience as a
-          content creator
+          {renderWithLineBreaks(t("banner.description"))}
         </span>
-        <Link to='/register' className={styles.link}>
-          <MyButton size="LARGE">Start Your Page</MyButton>
+        <Link to="/register" className={styles.link}>
+          <MyButton size="LARGE">
+            {renderWithLineBreaks(t("banner.ctaButton"))}
+          </MyButton>
         </Link>
       </div>
       <div className={styles.rightSide}>
@@ -47,14 +60,8 @@ const BannerSection = () => {
         <div className={styles.leftColumn}>
           <div className={styles.imgTrack}>
             {duplicatedLeft.map((src, index) => (
-              <div
-                className={styles.imgCard}
-                key={`left-${index}`}
-              >
-                <img
-                  src={src}
-                  alt={`author-${index + 1}`}
-                />
+              <div className={styles.imgCard} key={`left-${index}`}>
+                <img src={src} alt={`author-${index + 1}`} />
               </div>
             ))}
           </div>
@@ -64,14 +71,8 @@ const BannerSection = () => {
         <div className={styles.rightColumn}>
           <div className={styles.imgTrack}>
             {duplicatedRight.map((src, index) => (
-              <div
-                className={styles.imgCard}
-                key={`right-${index}`}
-              >
-                <img
-                  src={src}
-                  alt={`author-${index + 7}`}
-                />
+              <div className={styles.imgCard} key={`right-${index}`}>
+                <img src={src} alt={`author-${index + 7}`} />
               </div>
             ))}
           </div>
