@@ -40,7 +40,18 @@
      &--red {
         background: var(--red-color);
     }
+    
+     &--transparent {
+        background: transparent;
+        color: var(--text-color);
+    }
 
+
+    &--auto {
+        font: var(--font-s);
+        height: 40px;
+        width: auto;
+    }
 
     &--small {
         font: var(--font-s);
@@ -51,7 +62,7 @@
     &--medium {
         font: var(--font-s);
         height: 40px;
-        width: 100px;
+        width: 120px;
     }
 
     &--large {

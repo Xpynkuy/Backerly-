@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import styles from "./MyButton.module.scss";
 
 const ButtonSize = {
+  AUTO: 'auto',
   SMALL: "small",
   MEDIUM: "medium",
   LARGE: "large",
@@ -14,6 +15,7 @@ const ButtonColor = {
   GREEN: "green",
   GRAY: "gray",
   RED: "red",
+  TRANSPARENT: 'transparent',
 } as const;
 
 interface ButtonProps {
