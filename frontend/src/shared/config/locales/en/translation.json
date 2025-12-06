@@ -1,0 +1,18 @@
+{ 
+    "Statistics" : "Statistics",
+    "How it works" : "How it works",
+    "Features" : "Features",
+
+    "SIGN UP" : "SING UP",
+    "LOG IN" : "LOG IN",
+
+    
+    "banner.creatorsCount": "More than 500,000 creators are here",
+    "banner.title": "Your talent\nis worth money",
+    "banner.description": "The best way to earn and connect\nwith your audience as a content creator",
+    "banner.ctaButton": "Start Your Page",
+
+    "section.subs" : "subscribers on the platform",
+    "section.creators" : "active creators",
+    "section.payments" : "payments per year"
+}
