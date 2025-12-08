@@ -1,3 +1,6 @@
+@use '../../../app/styles/breakpoints.scss' as breakpoint;
+
+
 .header {
     width: 100%;
     height: 70px;
@@ -10,6 +13,11 @@
     border-bottom: 1px solid var(--gray-color);
     position: fixed;
     z-index: 1000;
+
+    @media (max-width: breakpoint.$bp-md) {
+        padding: 0 15px;
+        height: 50px;
+    }
  
     
     .logo {
@@ -18,11 +26,19 @@
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
+
+            @media (max-width: breakpoint.$bp-md) {
+                font: var(--font-l);
+            }
     }
 
     .links {
         display: flex;
         gap: 32px;
+
+        @media (max-width: breakpoint.$bp-sm-plus) {
+            display: none;
+        }
 
         a {
             color: var(--text-color-gray);
@@ -37,11 +53,17 @@
             &:active {
                 color: var(--text-color-black);
             }
+            @media (max-width: breakpoint.$bp-md) {
+                font: var(--font-s);
+                
+            }
+
         }
     }
 
     .nav__btn {
         display: flex;
+        align-items: center;
         gap: 10px;
 
       .nav__link {
