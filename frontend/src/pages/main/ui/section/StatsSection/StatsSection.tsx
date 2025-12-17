@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import styles from "./StastSection.module.scss";
+import styles from "./StatsSection.module.scss";
 
 const StatsSection = () => {
   const { t } = useTranslation();

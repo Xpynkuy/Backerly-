@@ -1,3 +1,5 @@
+@use '../../../../../app/styles/breakpoints.scss' as breakpoint;
+
 .statsContainer {
     display: flex;
     width: 100%;
@@ -18,11 +20,19 @@
 
             .title {
                 font: var(--font-xl);
+
+                @media (max-width: breakpoint.$bp-sm) {
+                    font: var(--font-m);
+                }
             }
 
             .desc {
                 font: var(--font-m);
                 color: var(--text-color-gray);
+                
+                @media (max-width: breakpoint.$bp-sm) {
+                    font: var(--font-s);
+                }
             }
         }
     }
