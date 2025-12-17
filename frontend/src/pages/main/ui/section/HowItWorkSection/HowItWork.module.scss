@@ -1,3 +1,5 @@
+@use '../../../../../app/styles/breakpoints.scss' as breakpoint;
+
 .SectionContainer {
   display: flex;
   flex-direction: column;
@@ -24,6 +26,10 @@
     }
     h2 {
       font: var(--font-xxl);
+
+      @media (max-width: breakpoint.$bp-md) {
+        font: var(--font-l);
+      }
     }
   }
 

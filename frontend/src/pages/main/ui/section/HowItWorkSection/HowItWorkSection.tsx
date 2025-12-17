@@ -1,11 +1,15 @@
+import { useTranslation } from "react-i18next";
 import styles from "./HowItWork.module.scss";
+import { renderWithLineBreaks } from "@shared/lib/utils/renderWithLineBreaks";
 
 const HowItWorkSection = () => {
+  const {t} = useTranslation()
+
   return (
     <section id="how-it-works" className={styles.SectionContainer}>
       <div className={styles.title}>
-        <span>How it works?</span>
-        <h2>Everything’s super easy</h2>
+        <span>{t('How it works?')}</span>
+        <h2>{t('Everything’s super easy')}</h2>
       </div>
 
       <div className={styles.cards}>
@@ -14,13 +18,12 @@ const HowItWorkSection = () => {
             src="/assets/1-pic.D0Dxt1l7.png"
             alt="Step 1"
           />
-          <span className={styles.step}>Step 1</span>
+          <span className={styles.step}>{t('Step 1')}</span>
           <h3 className={styles.cardTitle}>
-            Sign up <br /> and create your blog
+            {renderWithLineBreaks(t('workSection.title1'))}
           </h3>
           <span className={styles.cardDesc}>
-            Creating and setting up your page <br /> takes no more than five
-            minutes.
+            {renderWithLineBreaks(t('workSection.desc1'))}
           </span>
         </div>
         <div className={styles.card}>
@@ -28,12 +31,12 @@ const HowItWorkSection = () => {
             src="/assets/2-pic.CYkcJeEA.png"
             alt="Step 2"
           />
-          <span className={styles.step}>Step 2</span>
+          <span className={styles.step}>{t('Step 2')}</span>
           <h3 className={styles.cardTitle}>
-            Create content and share it <br /> with your audience
+            {renderWithLineBreaks(t('workSection.title2'))}
           </h3>
           <span className={styles.cardDesc}>
-            Post articles, photos, start <br /> live streams, and upload videos.
+            {renderWithLineBreaks(t('workSection.desc2'))}
           </span>
         </div>
         <div className={styles.card}>
@@ -41,13 +44,12 @@ const HowItWorkSection = () => {
             src="/assets/3-pic.DcCb6ZdZ.png"
             alt="Step 3"
           />
-          <span className={styles.step}>Step 3</span>
+          <span className={styles.step}>{t('Step 3')}</span>
           <h3 className={styles.cardTitle}>
-            Earn steady <br /> income
+            {renderWithLineBreaks(t('workSection.title3'))}
           </h3>
           <span className={styles.cardDesc}>
-            Payments are processed automatically. <br /> Recurring subscriptions
-            and donations provide.
+            {renderWithLineBreaks(t('workSection.desc3'))}
           </span>
         </div>
       </div>
