@@ -14,5 +14,36 @@
 
     "section.subs" : "subscribers on the platform",
     "section.creators" : "active creators",
-    "section.payments" : "payments per year"
+    "section.payments" : "payments per year",
+
+    "How it works?" : "How it works?",
+    "Everything’s super easy" : "Everything’s super easy",
+    "Step 1" : "Step 1",
+    "Step 2" : "Step 2",
+    "Step 3" : "Step 3",
+    "workSection.title1" : "Sign up\nand create your blog",
+    "workSection.title2" : "Create content and share it\nwith your audience",
+    "workSection.title3" : "Earn steady\nincome",
+    "workSection.desc1" : "Creating and setting up your page\ntakes no more than five minutes.",
+    "workSection.desc2" : "Post articles, photos, start\nlive streams, and upload videos.",
+    "workSection.desc3" : "Recurring subscriptions and donations\nprovide steady income.",
+    
+    "What we offer" : "What we offer",
+    "Everything you need to start earning" : "Everything you need to start earning",
+    "card.title1" : "Daily payouts",
+    "card.title2" : "Subscription levels",
+    "card.title3" : "Promotions",
+    "card.title4" : "Paid messages",
+    "card.title5" : "Donations",
+    "card.title6" : "Mass messaging",
+    "card.desc1" : "Receive payouts every day — your income\nalways arrives on time",
+    "card.desc2" : "Set up subscription levels and monetize\nyour\ncontent for maximum profit",
+    "card.desc3" : "Offer trial periods and subscription\ndiscounts",
+    "card.desc4" : "Make money by charging for message\naccess",
+    "card.desc5" : "Get support from your fans directly via\ndonations",
+    "card.desc6" : "Easily and effectively deliver your message\nto\nthe entire audience",
+    
+    "Blog not found" : "Blog not found",
+    "TO HOME PAGE" : "TO HOME PAGE",
+    "Sorry, the blog not found." : "Sorry, the blog not found."
 }
