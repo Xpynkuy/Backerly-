@@ -3,6 +3,7 @@ import styles from "./BannerSection.module.scss";
 import MyButton from "@shared/ui/button/MyButton";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { renderWithLineBreaks } from "@shared/lib/utils/renderWithLineBreaks";
 
 const leftImages = [
   "/assets/author-1.AU7h6DGX.webp",
@@ -26,15 +27,6 @@ const BannerSection = () => {
   const duplicatedRight = [...rightImages, ...rightImages];
 
   const { t } = useTranslation();
-
-  const renderWithLineBreaks = (text: string) => {
-    return text.split("\n").map((line, i) => (
-      <span key={i}>
-        {line}
-        {i < text.split("\n").length - 1 && <br />}
-      </span>
-    ));
-  };
 
   return (
     <section className={styles.section}>
