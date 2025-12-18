@@ -28,7 +28,7 @@ const RegisterForm = () => {
 
   useEffect(() => {
     if (isSuccess) {
-      navigate('./login')
+      navigate('/login')
     }
   }, [isSuccess]);
 
