@@ -5,6 +5,7 @@
 
     "SIGN UP" : "РЕГИСТРЦИЯ",
     "LOG IN" : "ВОЙТИ",
+    "Logout" : "Выйти",
 
     "banner.creatorsCount": "Более 500 000 авторов уже здесь",
     "banner.title": "Ваш талант\nстоит денег",
@@ -44,6 +45,17 @@
 
     "Blog not found" : "Блог не найден",
     "TO HOME PAGE" : "НА ГЛАВНУЮ",
-    "Sorry, the blog not found." : "К сожалению, запрошенный вами блог не найден."
+    "Sorry, the blog not found." : "К сожалению, запрошенный вами блог не найден.",
 
+    "registerForm.title" : "Регистрация",
+    "registerForm.desc" : "Создайте свой аккаунт. Это бесплатно и быстро",
+    "registerForm.btn" : "Создать аккаунт",
+    "registerForm.nav" : "Уже есть аккаунт?",
+    "registerForm.navLink" : "Авторизация",
+
+    "loginForm.title" : "Авторизация",
+    "loginForm.desc" : "Введите данные для создания аккаунта",
+    "loginForm.btn" : "Авторизироваться",
+    "loginForm.nav" : "Нет готового аккаунта?",
+    "loginForm.navLink" : "Создать новый"
 }

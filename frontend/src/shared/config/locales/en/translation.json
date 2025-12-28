@@ -5,6 +5,7 @@
 
     "SIGN UP" : "SING UP",
     "LOG IN" : "LOG IN",
+    "Logout" : "Logout",
 
     
     "banner.creatorsCount": "More than 500,000 creators are here",
@@ -45,5 +46,18 @@
     
     "Blog not found" : "Blog not found",
     "TO HOME PAGE" : "TO HOME PAGE",
-    "Sorry, the blog not found." : "Sorry, the blog not found."
+    "Sorry, the blog not found." : "Sorry, the blog not found.",
+
+
+    "registerForm.title" : "Register",
+    "registerForm.desc" : "Create your account. It's free and only takes a minute",
+    "registerForm.btn" : "Create Account",
+    "registerForm.nav" : "Already have an account?",
+    "registerForm.navLink" : "Sign up",
+
+    "loginForm.title" : "Sign In",
+    "loginForm.desc" : "Enter your credentials to access your account",
+    "loginForm.btn" : "Sign In",
+    "loginForm.nav" : "Don't have ad account?",
+    "loginForm.navLink" : "Create one"
 }
