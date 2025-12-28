@@ -1,4 +1,4 @@
-import styles from "./porfileBanner.module.scss";
+import styles from "./profileBanner.module.scss";
 
 interface profileBannerProps {
   src?: string;
