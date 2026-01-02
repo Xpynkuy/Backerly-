@@ -16,7 +16,7 @@ const AppRoute = () => {
       <Route element={<Layout />}>
         <Route path="/" element={<MainPage />}></Route>
         <Route
-          path="/profile"
+          path="/profile/:username"
           element={
             <ProtectedRoute>
               <Profile />
