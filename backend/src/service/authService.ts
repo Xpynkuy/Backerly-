@@ -16,6 +16,12 @@ export const registerUser = async (username: string, password: string) => {
 
   const hashedPassword = await hashPassword(password);
 
+  try {
+  } catch (error: any) {
+    if (error?.code === "P2002") throw new Error("Username already exists");
+    throw error;
+  }
+
   return prisma.user.create({
     data: {
       username,
@@ -54,10 +60,10 @@ export const refreshTokens = async (refreshToken: string) => {
   const storedToken = await TokenService.verifyRefreshToken(refreshToken);
 
   const newAccessToken = TokenService.generateAccessToken({
-    userId: storedToken.id,
+    userId: storedToken.userId,
   });
   const newRefreshToken = TokenService.generateRefreshToken({
-    userId: storedToken.id,
+    userId: storedToken.userId,
   });
 
   await TokenService.revokeRefreshToken(refreshToken);
