@@ -4,6 +4,7 @@ import cookieParser from "cookie-parser";
 import { connectDB } from "./config/db";
 import { PORT } from "./config/env";
 import router from "./routes/routes";
+import userRoutes from "./routes/userRoutes";
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/api/auth", router);
+app.use("/api/users", userRoutes);
 
 app.use("*", (req, res) => {
   res.status(404).json({ error: "Route not found" });
