@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useLoginMutation } from "@features/auth/model/api/authApi.ts";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@shared/lib/hooks/hooks.ts";
@@ -25,13 +25,7 @@ const LoginForm = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const { isAuthenticated, error } = useAppSelector((state) => state.auth);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/profile");
-    }
-  }, [isAuthenticated]);
+  const { error } = useAppSelector((state) => state.auth);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +34,8 @@ const LoginForm = () => {
     dispatch(setError(null));
 
     try {
-      await login(formData).unwrap();
+      const result = await login(formData).unwrap();
+      navigate(`/profile/${result.user.username}`);
     } catch (err) {
       let message = "Login failed";
 
