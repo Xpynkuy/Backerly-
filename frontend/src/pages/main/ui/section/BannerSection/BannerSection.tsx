@@ -35,20 +35,23 @@ const BannerSection = () => {
           <Zap size={18} />
           {renderWithLineBreaks(t("banner.creatorsCount"))}
         </div>
+
         <h1 className={styles.title}>
           {renderWithLineBreaks(t("banner.title"))}
         </h1>
+
         <span className={styles.desc}>
           {renderWithLineBreaks(t("banner.description"))}
         </span>
+
         <Link to="/register" className={styles.link}>
           <MyButton size="LARGE">
             {renderWithLineBreaks(t("banner.ctaButton"))}
           </MyButton>
         </Link>
       </div>
+
       <div className={styles.rightSide}>
-        {/* Левая колонка — движение вниз */}
         <div className={styles.leftColumn}>
           <div className={styles.imgTrack}>
             {duplicatedLeft.map((src, index) => (
@@ -59,7 +62,6 @@ const BannerSection = () => {
           </div>
         </div>
 
-        {/* Правая колонка — движение вверх */}
         <div className={styles.rightColumn}>
           <div className={styles.imgTrack}>
             {duplicatedRight.map((src, index) => (
