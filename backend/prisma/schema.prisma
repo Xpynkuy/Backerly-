@@ -13,6 +13,8 @@ model User {
   username      String        @unique
   password      String  
   createdAt     DateTime      @default(now())
+  avatarUrl     String?
+  bannerUrl     String?
   refreshTokens               RefreshToken[]
 
   @@map("users")
