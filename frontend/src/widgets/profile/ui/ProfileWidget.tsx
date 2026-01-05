@@ -1,9 +1,14 @@
 import { useGetUserByUsernameQuery, UserProfileCard } from "@entities/user";
+import { useAppSelector } from "@shared/lib/hooks/hooks";
 import Loader from "@shared/ui/loader/Loader";
 import { useParams } from "react-router-dom";
 
 export const ProfileWidget = () => {
   const { username } = useParams<{ username: string }>();
+  const authUser = useAppSelector((s) => s.auth.user);
+
+  const isMyProfile =
+    !!authUser && !!username && authUser.username === username;
   const {
     data: user,
     isLoading,
@@ -32,7 +37,7 @@ export const ProfileWidget = () => {
   }
   return (
     <div>
-      <UserProfileCard user={user} />
+      <UserProfileCard user={user} isMyProfile={isMyProfile} />
     </div>
   );
 };
