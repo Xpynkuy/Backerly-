@@ -16,6 +16,7 @@ model User {
   avatarUrl     String?
   bannerUrl     String?
   refreshTokens               RefreshToken[]
+  posts                       Post[]
 
   @@map("users")
 }
@@ -31,4 +32,15 @@ model RefreshToken {
   @@index([token])
   @@index([expiresAt])
   @@map("refresh_token")
+}
+
+model Post {
+  id            String    @id @default(cuid())
+  authorId      String
+  author        User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  title         String
+  description   String
+  imageUrl      String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt  
 }
