@@ -5,6 +5,8 @@ import { connectDB } from "./config/db";
 import { PORT } from "./config/env";
 import router from "./routes/routes";
 import userRoutes from "./routes/userRoutes";
+import postRoutes from "./routes/postRoutes"
+import postActionRoutes from "./routes/postActionRoutes"
 import path from "path";
 
 const app = express();
@@ -28,6 +30,8 @@ app.get("/health", (req, res) => {
 
 app.use("/api/auth", router);
 app.use("/api/users", userRoutes);
+app.use("/api/users", postRoutes)
+app.use("/api/posts", postActionRoutes);
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use("*", (req, res) => {
