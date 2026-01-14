@@ -2,6 +2,10 @@
     --font-family: "Noto Sans", "sans-serif";
     
     //FONT
+    --font-size-extraSmall: 12px;
+    --font-line-extraSmall: 20px;
+    --font-extraSmall: var(--font-size-extraSmall) / var(--font-line-extraSmall) var(--font-family);
+
     --font-size-s: 16px;
     --font-line-s: 22px;
     --font-s: var(--font-size-s) / var(--font-line-s) var(--font-family);
