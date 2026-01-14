@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import styles from "./MyButton.module.scss";
 
 const ButtonSize = {
-  AUTO: 'auto',
+  AUTO: "auto",
   SMALL: "small",
   MEDIUM: "medium",
   LARGE: "large",
@@ -15,11 +15,13 @@ const ButtonColor = {
   GREEN: "green",
   GRAY: "gray",
   RED: "red",
-  TRANSPARENT: 'transparent',
+  TRANSPARENT: "transparent",
 } as const;
 
 interface ButtonProps {
   children?: ReactNode;
+  icon?: ReactNode;
+  iconPosition?: "left";
   size?: keyof typeof ButtonSize;
   color?: keyof typeof ButtonColor;
   className?: string;
@@ -31,6 +33,8 @@ interface ButtonProps {
 const MyButton = (props: ButtonProps) => {
   const {
     children,
+    icon,
+    iconPosition = "left",
     size = "MEDIUM",
     color = "PRIMARY",
     className = "",
@@ -57,7 +61,10 @@ const MyButton = (props: ButtonProps) => {
       disabled={disabled}
       type={type}
     >
-      {children}
+      {icon && iconPosition === "left" && (
+        <span className={styles.icon}>{icon}</span>
+      )}
+      {children && <span className={styles.text}>{children}</span>}
     </button>
   );
 };
