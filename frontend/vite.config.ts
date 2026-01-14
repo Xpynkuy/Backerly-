@@ -11,6 +11,12 @@ export default defineConfig({
       },
     }),
   ],
+  //DEV
+  server: {
+    host: true,
+    port: 5173,
+    strictPort: true,
+  },
   resolve: {
     alias: {
       app: path.resolve(__dirname, "src/app"),
