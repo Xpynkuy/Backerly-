@@ -1,6 +1,7 @@
 import { useGetUserByUsernameQuery, UserProfileCard } from "@entities/user";
 import { useAppSelector } from "@shared/lib/hooks/hooks";
 import Loader from "@shared/ui/loader/Loader";
+import { ProfilePostsWidget } from "@widgets/profilePost/ui/ProfilePost";
 import { useParams } from "react-router-dom";
 
 export const ProfileWidget = () => {
@@ -37,7 +38,17 @@ export const ProfileWidget = () => {
   }
   return (
     <div>
-      <UserProfileCard user={user} isMyProfile={isMyProfile} />
+      <UserProfileCard
+        user={user}
+        isMyProfile={isMyProfile}
+        feedSlot={
+          <ProfilePostsWidget
+            username={user.username}
+            isMyProfile={isMyProfile}
+          />
+        }
+        subscriptionSlot={<div>3</div>}
+      />
     </div>
   );
 };
