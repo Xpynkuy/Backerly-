@@ -4,15 +4,15 @@ import MyButton from "@shared/ui/button/MyButton";
 import { Heart } from "lucide-react";
 
 
-export const PostLikeButton = ({
-  username,
-  postId,
-  currentLikesCount,
-}: {
+interface PostLikeButtonProps {
   username: string;
   postId: string;
   currentLikesCount: number;
-}) => {
+  liked?: boolean;
+}
+
+export const PostLikeButton = (props: PostLikeButtonProps) => {
+  const {username, postId, currentLikesCount, liked} = props
   const dispatch = useAppDispatch();
 
   const [toggleLike, { isLoading }] = useToggleLikeMutation();
@@ -35,7 +35,7 @@ export const PostLikeButton = ({
   };
 
   return (
-    <MyButton icon={<Heart/>} onClick={onClick} disabled={isLoading} color="TRANSPARENT" size="AUTO">
+    <MyButton icon={<Heart className={liked ? "likedHeart" : ""}/>} onClick={onClick} disabled={isLoading} color="TRANSPARENT" size="AUTO">
        {currentLikesCount}
     </MyButton>
   );
