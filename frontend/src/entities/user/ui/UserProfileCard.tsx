@@ -7,16 +7,20 @@ import {
   useUpdateAvatarMutation,
   useUpdateBannerMutation,
 } from "../model/api/userApi";
-import { useRef } from "react";
+import { useRef, type ReactNode } from "react";
 
 const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || "http://localhost:5001";
 
 export const UserProfileCard = ({
   user,
   isMyProfile,
+  feedSlot,          
+  subscriptionSlot,
 }: {
   user: User;
   isMyProfile: boolean;
+   feedSlot?: ReactNode;
+  subscriptionSlot?: ReactNode;
 }) => {
   const [updateAvatar, { isLoading: avatarLoading }] =
     useUpdateAvatarMutation();
@@ -28,10 +32,10 @@ export const UserProfileCard = ({
 
   const avatarSrc = user.avatarUrl
     ? `${API_ORIGIN}${user.avatarUrl}`
-    : "/avatar.jpg";
+    : "/default_avatar.png";
   const bannerSrc = user.bannerUrl
     ? `${API_ORIGIN}${user.bannerUrl}`
-    : "/bgImage.jpg";
+    : "/default_banner.png";
 
   const pickAvatar = () => avatarInputRef.current?.click();
   const pickBanner = () => bannerInputRef.current?.click();
@@ -100,7 +104,7 @@ export const UserProfileCard = ({
             </div>
           </div>
         </div>
-        <div className={styles.profileFeed}>2</div>
+         <div className={styles.profileFeed}>{feedSlot}</div>
         <div className={styles.profileSubscription}>3</div>
       </div>
     </div>
