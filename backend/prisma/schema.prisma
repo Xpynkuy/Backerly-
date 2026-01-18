@@ -19,6 +19,10 @@ model User {
   posts                     Post[]
   comments                  Comment[]
   likes                     PostLike[]
+  subscriptionTiers         SubscriptionTier[]    @relation("author_tiers")
+  subscriptionsAsSubscriber Subscription[]        @relation("subscriber_subscriptions")
+  subscriptionsAsAuthor     Subscription[]        @relation("author_subscriptions")
+
 
   @@map("users")
 }
@@ -48,9 +52,14 @@ model Post {
   comments      Comment[]
   likes         PostLike[]
 
+  isPaid        Boolean     @default(false)
+  accessTierId  String?
+  accessTier    SubscriptionTier?  @relation("SubscriptionTierPosts",fields: [accessTierId],references: [id],onDelete: SetNull)
+
   @@index([authorId, createdAt])
   @@map("posts")
 }
+
 
 model Comment {
   id            String      @id @default(cuid())
@@ -59,7 +68,7 @@ model Comment {
   authorId      String
   author        User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
   text          String
-  createdAt     DateTime @default(now())
+  createdAt     DateTime    @default(now())
 
   @@index([postId, createdAt])
   @@map("comments")
@@ -71,10 +80,45 @@ model PostLike {
   post          Post       @relation(fields: [postId], references: [id], onDelete: Cascade)
   userId        String
   user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt     DateTime @default(now())
+  createdAt     DateTime   @default(now())
 
   @@unique([postId, userId])
   @@index([postId])
   @@index([userId])
   @@map("post_likes")
+}
+
+model SubscriptionTier {
+  id            String   @id @default(cuid())
+  authorId      String
+  author        User     @relation("author_tiers", fields: [authorId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  imageUrl      String?
+  priceCents    Int?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  posts         Post[]   @relation("SubscriptionTierPosts")
+  subscriptions Subscription[]
+
+  @@index([authorId])
+  @@map("subscription_tiers")
+}
+
+
+model Subscription {
+  id            String    @id @default(cuid())
+  subscriberId  String
+  subscriber    User      @relation("subscriber_subscriptions", fields: [subscriberId], references: [id], onDelete: Cascade)
+  authorId      String
+  author        User      @relation("author_subscriptions", fields: [authorId], references: [id], onDelete: Cascade)
+  tierId        String?
+  tier          SubscriptionTier? @relation(fields: [tierId], references: [id], onDelete: SetNull)
+  createdAt     DateTime  @default(now())
+
+  @@unique([subscriberId, authorId, tierId])
+  @@index([authorId])
+  @@map("subscriptions")
 }
