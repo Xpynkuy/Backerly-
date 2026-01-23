@@ -4,6 +4,7 @@
 
 html {
     scroll-behavior: smooth;
+    scrollbar-gutter: stable both-edges;
 }
 
 body {
@@ -11,5 +12,16 @@ body {
     color: var(--text-color-black);
     margin: 0;
     padding: 0;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--bg-color-lightGray);
+  border-radius: var(--border-radius);
 }
 
