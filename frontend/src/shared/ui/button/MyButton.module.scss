@@ -21,8 +21,8 @@
     line-height: 0;
 
     svg {
-        width: 24px;
-        height: 24px;
+        // width: 24px;
+        // height: 24px;
     }
   }
 
@@ -85,8 +85,9 @@
     
 
     &--full {
-        font: var(--font-l);
+        font: var(--font-m);
         height: 50px;
+        width: 100%;
         max-width: 100%;
     }
 }
