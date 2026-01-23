@@ -1,0 +1,23 @@
+.AppLink {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-color-gray);
+    font: var(--font-s);
+    text-decoration: none;
+    transition: color 0.2s ease;
+
+        &:hover {
+            color: var(--text-color-black);
+        }
+
+        &:active {
+            color: var(--text-color-black);
+        }
+
+        .icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+}
