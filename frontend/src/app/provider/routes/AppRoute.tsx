@@ -6,7 +6,6 @@ import { RegisterPage } from "@pages/register";
 import { AuthLayout } from "@widgets/authLayout";
 import { ProtectedRoute } from "@shared/lib/protectedRoute/ProtectedRoute.tsx";
 import { Profile } from "@pages/profile";
-import { Feed } from "@pages/feed";
 import { NotFoundPage } from "@pages/notFoundPage";
 import { SearchPage } from "@pages/search";
 
