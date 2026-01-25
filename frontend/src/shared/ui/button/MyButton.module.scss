@@ -47,6 +47,10 @@
 
     &--gray {
         background: var(--gray-color);
+        color: var(--text-color-dark);
+        &:hover {
+            opacity: 1;
+        }
     }
 
      &--red {
