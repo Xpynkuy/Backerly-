@@ -9,8 +9,8 @@ export const NotFoundPage = () => {
     <div className={styles.container}>
       <div className={styles.content}>
         <h1 className={styles.error}>404</h1>
-        <h2 className={styles.title}>{t("Blog not found")}</h2>
-        <span className={styles.desc}>{t("Sorry, the blog not found.")}</span>
+        <h2 className={styles.title}>{t("Page not found")}</h2>
+        <span className={styles.desc}>{t("Sorry, the page not found.")}</span>
         <Link to='/' className={styles.link}>
           <MyButton size="AUTO">{t("TO HOME PAGE")}</MyButton>
         </Link>
