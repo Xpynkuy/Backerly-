@@ -15,6 +15,7 @@ model User {
   createdAt     DateTime    @default(now())
   avatarUrl     String?
   bannerUrl     String?
+  description   String?
   refreshTokens             RefreshToken[]
   posts                     Post[]
   comments                  Comment[]
