@@ -1,73 +1,73 @@
-@use '../../../app/styles/breakpoints.scss' as breakpoint;
-
+@use "../../../app/styles/breakpoints.scss" as breakpoint;
 
 .header {
-    width: 100%;
-    height: 70px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: transparent;
-    backdrop-filter: blur(30px);
-    padding: 0px 20px;
-    border-bottom: 1px solid var(--gray-color);
-    position: fixed;
-    z-index: 1000;
+  width: 100%;
+  height: 70px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: transparent;
+  backdrop-filter: blur(30px);
+  padding: 0px 20px;
+  border-bottom: 1px solid var(--gray-color);
+  position: fixed;
+  z-index: 1000;
+
+  @media (max-width: breakpoint.$bp-md) {
+    padding: 0 15px;
+    height: 50px;
+  }
+
+  .logo {
+    font: var(--font-xxl);
+    text-decoration: none;
+    background-image: linear-gradient(
+      var(--accent-color),
+      var(--primary-color)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
 
     @media (max-width: breakpoint.$bp-md) {
-        padding: 0 15px;
-        height: 50px;
+      font: var(--font-l);
     }
- 
-    
-    .logo {
-        font: var(--font-xxl);
-        background-image: linear-gradient(var(--accent-color), var(--primary-color));
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
+  }
 
-            @media (max-width: breakpoint.$bp-md) {
-                font: var(--font-l);
-            }
+  .links {
+    display: flex;
+    gap: 32px;
+
+    @media (max-width: breakpoint.$bp-sm-plus) {
+      display: none;
     }
 
-    .links {
-        display: flex;
-        gap: 32px;
+    a {
+      color: var(--text-color-gray);
+      font: var(--font-m);
+      text-decoration: none;
+      transition: color 0.2s ease;
 
-        @media (max-width: breakpoint.$bp-sm-plus) {
-            display: none;
-        }
+      &:hover {
+        color: var(--text-color-black);
+      }
 
-        a {
-            color: var(--text-color-gray);
-            font: var(--font-m);
-            text-decoration: none;
-            transition: color 0.2s ease;
-
-            &:hover {
-                color: var(--text-color-black);
-            }
-
-            &:active {
-                color: var(--text-color-black);
-            }
-            @media (max-width: breakpoint.$bp-md) {
-                font: var(--font-s);
-                
-            }
-
-        }
-    }
-
-    .nav__btn {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-
-      .nav__link {
-          text-decoration: none;
+      &:active {
+        color: var(--text-color-black);
+      }
+      @media (max-width: breakpoint.$bp-md) {
+        font: var(--font-s);
       }
     }
+  }
+
+  .nav__btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .nav__link {
+      text-decoration: none;
+    }
+  }
 }
