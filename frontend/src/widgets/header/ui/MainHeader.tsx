@@ -1,6 +1,6 @@
+import { DropDown } from "@features/dropDown";
 import styles from "./Header.module.scss";
 import { LangSwitch } from "@features/langSwitch";
-import { DropDown } from "@shared/ui/dropDown/DropDown";
 
 const MainHeader = () => {
   return (
