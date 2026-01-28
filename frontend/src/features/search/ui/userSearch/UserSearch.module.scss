@@ -1,0 +1,27 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    max-width: 800px;
+    width: 100%;
+    margin: 0 auto;
+    gap: 15px;
+    padding: 20px;
+
+    .title {
+        font: var(--font-xl);
+    }
+
+    .notif {
+        display: flex;
+        align-items: center;
+        justify-items: center;
+        color: var(--text-color-gray);
+        font: var(--font-m);
+    }
+
+    .userList {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+}
