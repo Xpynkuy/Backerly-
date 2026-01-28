@@ -8,6 +8,7 @@ import { ProtectedRoute } from "@shared/lib/protectedRoute/ProtectedRoute.tsx";
 import { Profile } from "@pages/profile";
 import { NotFoundPage } from "@pages/notFoundPage";
 import { SearchPage } from "@pages/search";
+import { SubscriptionsPage } from "@pages/subscriptions";
 
 const AppRoute = () => {
   return (
@@ -28,6 +29,14 @@ const AppRoute = () => {
           element={
             <ProtectedRoute>
               <SearchPage />
+            </ProtectedRoute>
+          }
+        ></Route>
+        <Route
+          path="/subscriptions"
+          element={
+            <ProtectedRoute>
+              <SubscriptionsPage />
             </ProtectedRoute>
           }
         ></Route>
