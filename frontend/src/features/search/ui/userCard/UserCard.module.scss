@@ -1,0 +1,27 @@
+.cardContainer {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 6px;
+  border: 1px solid var(--gray-color);
+  border-radius: var(--border-radius);
+  .name {
+    color: var(--text-color);
+    font: var(--font-l);
+    text-decoration: none;
+  }
+
+  .desc {
+    font: var(--font-m);
+    color: var(--text-color-gray);
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+
+  .notif {
+    font: var(--font-m);
+    color: var(--text-color-gray);
+  }
+}
