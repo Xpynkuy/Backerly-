@@ -8,37 +8,30 @@ import { useAppDispatch } from "@shared/lib/hooks/hooks";
 import MyButton from "@shared/ui/button/MyButton";
 import { MessageCircleMore } from "lucide-react";
 import styles from "./PostComment.module.scss";
-import MyInput from "@shared/ui/input/MyInput";
-import Loader from "@shared/ui/loader/Loader";
-import Avatar from "@shared/ui/avatar/Avatar";
-import { formatDataTime } from "@shared/lib/format/formatData";
+import { CommentForm } from "@features/commentForm/ui/CommentForm";
+import { CommentList } from "@entities/comment/ui/commentList/CommentList";
 
-const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || "http://localhost:5001";
+interface PostCommentsProps {
+  username: string;
+  postId: string;
+  locale: string;
+}
 
 export const PostComments = ({
   username,
   postId,
   locale,
-}: {
-  username: string;
-  postId: string;
-  locale: string;
-}) => {
+}: PostCommentsProps) => {
   const dispatch = useAppDispatch();
 
-  // open — локальное UI состояние (не нужно в redux)
   const [open, setOpen] = useState(false);
-
-  // text — локальный ввод
   const [text, setText] = useState("");
 
-  // запрос комментов, выполняется только если open=true
   const { data, isFetching, isError, refetch } = useGetCommentsQuery(
     { postId },
     { skip: !open }
   );
 
-  // mutation добавления
   const [addComment, { isLoading }] = useAddCommentMutation();
 
   const toggle = () => setOpen((p) => !p);
@@ -46,25 +39,22 @@ export const PostComments = ({
   const submit = async () => {
     if (!text.trim()) return;
 
-    // 1) отправили коммент
     const res = await addComment({ postId, text }).unwrap();
-
-    // 2) очистили ввод
     setText("");
 
-    // 3) обновили счётчик комментов у поста в ленте
     dispatch(
       postApi.util.updateQueryData(
         "getProfilePosts",
         { username, take: 5, cursor: null },
         (draft) => {
-          const p = draft.items.find((x) => x.id === postId);
-          if (!p) return;
-
-          p._count.comments = res.commentsCount;
+          const post = draft.items.find((p) => p.id === postId);
+          if (post) {
+            post._count.comments = res.commentsCount;
+          }
         }
       )
     );
+
     await refetch();
   };
 
@@ -76,59 +66,26 @@ export const PostComments = ({
         size="AUTO"
         color="TRANSPARENT"
       >
-        {open ? (
-          <span className={styles.btnText}>Hide</span>
-        ) : (
-          <span className={styles.btnText}>Show comments</span>
-        )}
+        <span className={styles.btnText}>
+          {open ? "Hide" : "Show comments"}
+        </span>
       </MyButton>
 
       {open && (
         <div className={styles.commentContainer}>
-          <div className={styles.commentInput}>
-            <MyInput
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Write a comment..."
-            />
-            <MyButton onClick={submit} disabled={isLoading} color="PRIMARY">
-              {isLoading ? "..." : "Send"}
-            </MyButton>
-          </div>
+          <CommentForm
+            value={text}
+            onChange={setText}
+            onSubmit={submit}
+            isLoading={isLoading}
+          />
 
-          <div style={{ marginTop: 10 }}>
-            {isFetching && (
-              <div>
-                <Loader />
-              </div>
-            )}
-            {isError && <div>Failed to load comments</div>}
-
-            {(data?.items ?? []).map((c) => {
-              const avatarSrc = c.author.avatarUrl
-                ? `${API_ORIGIN}${c.author.avatarUrl}`
-                : "/default_avatar.png";
-
-              return (
-                <div key={c.id} className={styles.author}>
-                  <Avatar src={avatarSrc} size="38px" />
-                  <div className={styles.authorCommentBlock}>
-                    <span className={styles.authorName}>
-                      {c.author.username}
-                    </span>
-                    <p className={styles.authorText}>{c.text}</p>
-                    <span className={styles.commentDate}>
-                      {formatDataTime(c.createdAt, locale)}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-
-            {!isFetching && (data?.items?.length ?? 0) === 0 && (
-              <div className={styles.notif}>No comments yet</div>
-            )}
-          </div>
+          <CommentList
+            comments={data?.items}
+            isFetching={isFetching}
+            isError={isError}
+            locale={locale}
+          />
         </div>
       )}
     </div>

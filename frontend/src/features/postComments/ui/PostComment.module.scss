@@ -2,52 +2,8 @@
     display: flex;
     flex-direction: column;
     border: 1px solid var(--gray-color);
+    border-radius: var(--border-radius);
     gap: 20px;
     margin: 10px 0px;
     padding: 10px;
-
-    .commentInput {
-        display: flex;
-        gap: 10px;
-    }
-
-    .author {
-        display: flex;
-        align-items: flex-start;
-        gap: 12px;
-        margin-bottom: 20px;
-
-
-        .authorCommentBlock {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-
-            .authorName {
-                font: var(--font-m);
-                line-height: 0.5
-            }
-            
-            .authorText {
-                font: var(--font-s);
-                color: var(--text-color-gray);
-            }
-
-            .commentDate {
-                font: var(--font-extraSmall);
-                color: var(--text-color-gray);
-            }
-        }
-    }
-
-
-    .notif {
-        display: flex;
-        justify-content: center;
-        color: var(--text-color-gray);
-    }
 }
-
-    .btnText {
-        color: var(--primary-color);
-    }
