@@ -1,0 +1,32 @@
+@use "../../../../app/styles/breakpoints.scss" as breakpoint;
+
+.listContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  .title {
+    color: var(--text-color);
+    font: var(--font-xl);
+  }
+
+  .list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+
+    @media (max-width: breakpoint.$bp-md) {
+      grid-template-columns: repeat(2, 1fr);
+    };
+
+    @media (max-width: breakpoint.$bp-sm-plus) {
+      grid-template-columns: repeat(1, 1fr);
+    }
+  }
+
+  .notif {
+    display: flex;
+    margin: 0 auto;
+    color: var(--text-color-gray);
+  }
+}

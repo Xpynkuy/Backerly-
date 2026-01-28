@@ -1,0 +1,30 @@
+.cardContainer {
+  border: 1px solid var(--gray-color);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  gap: 20px;
+  display: flex;
+  flex-direction: column;
+
+  .cardHeader {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .info {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+
+    .name {
+      color: var(--text-color);
+      font: var(--font-m);
+      text-decoration: none;
+    }
+
+    .tierTitle {
+        color: var(--text-color);
+        font: var(--font-m);
+    }
+  }
+}
