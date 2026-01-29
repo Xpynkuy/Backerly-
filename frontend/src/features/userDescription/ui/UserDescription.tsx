@@ -4,6 +4,7 @@ import { useUpdateDescriptionMutation } from "@entities/user/model/api/userApi";
 import TextArea from "@shared/ui/textArea/TextArea";
 import styles from "./UserDescription.module.scss";
 import { Trash } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface UserDescriptionProps {
   username: string;
@@ -14,6 +15,7 @@ export const UserDescription = (props: UserDescriptionProps) => {
   const { username, description, isMyProfile } = props;
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(description ?? "");
+  const { t } = useTranslation();
 
   const [updateDescription, { isLoading }] = useUpdateDescriptionMutation();
 
@@ -39,10 +41,10 @@ export const UserDescription = (props: UserDescriptionProps) => {
           />
           <div className={styles.buttons}>
             <MyButton onClick={save} disabled={isLoading}>
-              Save
+              {t("Save")}
             </MyButton>
             <MyButton color="RED" onClick={() => setEditing(false)}>
-              Cancel
+              {t("Cancel")}
             </MyButton>
           </div>
         </>
@@ -57,7 +59,7 @@ export const UserDescription = (props: UserDescriptionProps) => {
                 color="TRANSPARENT"
                 onClick={() => setEditing(true)}
               >
-                {description ? "Edit" : "Add description"}
+                {description ? t("Edit") : t("Add description")}
               </MyButton>
 
               {description && (
@@ -72,7 +74,7 @@ export const UserDescription = (props: UserDescriptionProps) => {
                     })
                   }
                 >
-                  Delete
+                  {t("Delete")}
                 </MyButton>
               )}
             </div>
