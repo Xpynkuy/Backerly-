@@ -1,11 +1,12 @@
 import { Request, Response } from "express";
 import {
+  getUserProfile,
   loginUser,
   logout,
   refreshTokens,
   registerUser,
 } from "../service/authService";
-
+import { getAuthUserId } from "../utils/getAuthUserId";
 
 class AuthController {
   async registration(req: Request, res: Response) {
@@ -34,7 +35,7 @@ class AuthController {
 
       const { accessToken, refreshToken, user } = await loginUser(
         username,
-        password
+        password,
       );
 
       res.cookie("refreshToken", refreshToken, {
@@ -88,6 +89,29 @@ class AuthController {
       res.json({ message: "Logged out successfully" });
     } catch (error: any) {
       res.status(500).json({ error: error.message });
+    }
+  }
+
+  async me(req: Request, res: Response) {
+    try {
+      const userId = getAuthUserId(req);
+
+      if (!userId) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const user = await getUserProfile(userId);
+
+      if (!user) {
+        return res.status(404).json({
+          error: "User not found",
+        });
+      }
+      return res.json(user);
+    } catch (e: any) {
+      return res.status(500).json({
+        error: "Server error",
+      });
     }
   }
 }
