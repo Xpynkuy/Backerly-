@@ -5,7 +5,7 @@ import { EyeClosed, EyeIcon } from "lucide-react";
 
 interface MyInputProps {
   value?: string;
-  onChange?: React.ChangeEventHandler<HTMLInputElement>
+  onChange?: React.ChangeEventHandler<HTMLInputElement>;
   placeholder?: string;
   type?: React.HTMLInputTypeAttribute;
   required?: boolean;
