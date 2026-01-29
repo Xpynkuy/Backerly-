@@ -1,0 +1,25 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 360px;
+  
+
+  padding: 10px;
+  gap: 10px;
+
+  .desc {
+    font: var(--font-s);
+    color: var(--text-color-gray);
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    min-width: 0;
+  }
+
+  .buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
