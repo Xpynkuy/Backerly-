@@ -16,12 +16,6 @@ export const registerUser = async (username: string, password: string) => {
 
   const hashedPassword = await hashPassword(password);
 
-  try {
-  } catch (error: any) {
-    if (error?.code === "P2002") throw new Error("Username already exists");
-    throw error;
-  }
-
   return prisma.user.create({
     data: {
       username,
@@ -77,4 +71,16 @@ export const refreshTokens = async (refreshToken: string) => {
 
 export const logout = async (refreshToken: string) => {
   await TokenService.revokeRefreshToken(refreshToken);
+};
+
+export const getUserProfile = async (userId: string) => {
+  return prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      username: true,
+      avatarUrl: true,
+      bannerUrl: true,
+    },
+  });
 };
