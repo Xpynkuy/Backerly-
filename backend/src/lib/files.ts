@@ -30,3 +30,19 @@ export function urlToAbsoluteUploadPath(url: string) {
   }
   return absolute;
 }
+
+export const deleteFile = async (relativePath?: string | null) => {
+  if (!relativePath) return;
+
+  try {
+    const normalized = relativePath.startsWith("/")
+      ? relativePath.slice(1)
+      : relativePath;
+    const filePath = path.join(process.cwd(), normalized);
+    await fs.promises.access(filePath);
+    await fs.promises.unlink(filePath);
+    console.log("Delete file", filePath);
+  } catch (err: any) {
+    console.warn("Failed to delete file", relativePath, err?.message);
+  }
+};
