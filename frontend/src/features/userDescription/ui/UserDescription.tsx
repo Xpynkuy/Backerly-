@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import MyButton from "@shared/ui/button/MyButton";
 import { useUpdateDescriptionMutation } from "@entities/user/model/api/userApi";
 import TextArea from "@shared/ui/textArea/TextArea";
@@ -11,7 +11,7 @@ interface UserDescriptionProps {
   description?: string | null;
   isMyProfile: boolean;
 }
-export const UserDescription = (props: UserDescriptionProps) => {
+export const UserDescription = memo((props: UserDescriptionProps) => {
   const { username, description, isMyProfile } = props;
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(description ?? "");
@@ -83,4 +83,4 @@ export const UserDescription = (props: UserDescriptionProps) => {
       )}
     </div>
   );
-};
+});
