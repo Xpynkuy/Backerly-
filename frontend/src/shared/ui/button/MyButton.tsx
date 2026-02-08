@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { memo, type ReactNode } from "react";
 import styles from "./MyButton.module.scss";
 
 const ButtonSize = {
@@ -30,7 +30,7 @@ interface ButtonProps {
   type?: "button" | "submit" | "reset";
 }
 
-const MyButton = (props: ButtonProps) => {
+const MyButton = memo((props: ButtonProps) => {
   const {
     children,
     icon,
@@ -67,6 +67,6 @@ const MyButton = (props: ButtonProps) => {
       {children && <span className={styles.text}>{children}</span>}
     </button>
   );
-};
+});
 
 export default MyButton;
