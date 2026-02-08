@@ -1,0 +1,24 @@
+@use "../../../../src/app/styles/breakpoints.scss" as breakpoint;
+
+.container {
+  display: flex;
+  flex-direction: column;
+
+  .main {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 20px;
+    width: 100%;
+    max-width: 1000px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 20px;
+    padding-top: 20px;
+    box-sizing: border-box;
+    border-top: 2px solid var(--gray-color);
+
+    @media (max-width: breakpoint.$bp-sm-plus) {
+      grid-template-columns: 1fr;
+    }
+  }
+}
