@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
+import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppSelector } from "@shared/lib/hooks/hooks.ts";
 import { useRegisterMutation } from "@features/auth/model/api/authApi.ts";
@@ -8,51 +9,49 @@ import MyButton from "@shared/ui/button/MyButton.tsx";
 import { useTranslation } from "react-i18next";
 import { renderWithLineBreaks } from "@shared/lib/utils/renderWithLineBreaks";
 
-interface RegisterForm {
+interface RegisterFormData {
   username: string;
   password: string;
 }
 
 const RegisterForm = () => {
-  const [formData, setFormData] = useState<RegisterForm>({
-    username: "",
-    password: "",
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<RegisterFormData>({
+    defaultValues: {
+      username: "",
+      password: "",
+    },
+    mode: "onBlur",
   });
-  const [register, { isLoading, isSuccess }] = useRegisterMutation();
+
+  const [registerUser, { isLoading, isSuccess }] = useRegisterMutation();
   const navigate = useNavigate();
   const { isAuthenticated } = useAppSelector((state) => state.auth);
-
   const { t } = useTranslation();
 
   useEffect(() => {
     if (isAuthenticated) {
       navigate("/profile");
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, navigate]);
 
   useEffect(() => {
     if (isSuccess) {
       navigate("/login");
     }
-  }, [isSuccess]);
+  }, [isSuccess, navigate]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const onSubmit = async (data: RegisterFormData) => {
     try {
-      await register(formData).unwrap();
+      await registerUser(data).unwrap();
     } catch (err) {
       console.log("Registration failed", err);
     }
   };
 
-  const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
   return (
     <div className={styles.container}>
       <div className={styles.header}>
@@ -60,21 +59,39 @@ const RegisterForm = () => {
         <h3>{renderWithLineBreaks(t("registerForm.title"))}</h3>
         <p>{renderWithLineBreaks(t("registerForm.desc"))}</p>
       </div>
-      <form className={styles.form} onSubmit={handleSubmit}>
+      <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
         <MyInput
-          name="username"
+          {...register("username", {
+            required: t("Username is required"),
+            minLength: {
+              value: 3,
+              message: t("Username must be at least 3 characters"),
+            },
+            maxLength: {
+              value: 20,
+              message: t("Username must be less than 20 characters"),
+            },
+          })}
           placeholder="Username"
-          value={formData.username}
-          onChange={handleChange}
-        ></MyInput>
+          error={errors.username?.message}
+        />
         <MyInput
-          name="password"
+          {...register("password", {
+            required: t("Password is required"),
+            minLength: {
+              value: 6,
+              message: t("Password must be at least 6 characters"),
+            },
+            maxLength: {
+              value: 20,
+              message: t("Username must be less than 20 characters"),
+            },
+          })}
           placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
           type="password"
           showPasswordToggle={true}
-        ></MyInput>
+          error={errors.password?.message}
+        />
 
         <MyButton type="submit" disabled={isLoading} size="FULL">
           {renderWithLineBreaks(t("registerForm.btn"))}
