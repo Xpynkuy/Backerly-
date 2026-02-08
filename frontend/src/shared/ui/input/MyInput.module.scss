@@ -35,3 +35,12 @@
   height: 18px;
   padding: 0;
 }
+
+.inputError {
+  border-color: var(--red-color);
+}
+
+.errorText {
+  color: var(--red-color);
+  font: var(--font-s);
+}
