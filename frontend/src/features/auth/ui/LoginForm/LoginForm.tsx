@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { memo } from "react";
+import { useForm } from "react-hook-form";
 import { useLoginMutation } from "@features/auth/model/api/authApi.ts";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@shared/lib/hooks/hooks.ts";
@@ -9,50 +10,48 @@ import MyButton from "@shared/ui/button/MyButton.tsx";
 import { useTranslation } from "react-i18next";
 import { renderWithLineBreaks } from "@shared/lib/utils/renderWithLineBreaks";
 
-interface LoginForm {
+interface LoginFormData {
   username: string;
   password: string;
 }
 
-const LoginForm = () => {
-  const [formData, setFormData] = useState<LoginForm>({
-    username: "",
-    password: "",
+const LoginForm = memo(() => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormData>({
+    defaultValues: {
+      username: "",
+      password: "",
+    },
+    mode: "onBlur",
   });
-  const [login, { isLoading }] = useLoginMutation();
 
+  const [login, { isLoading }] = useLoginMutation();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { t } = useTranslation();
-
   const { error } = useAppSelector((state) => state.auth);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Очищаем предыдущую ошибку
+  const onSubmit = async (data: LoginFormData) => {
     dispatch(setError(null));
 
     try {
-      const result = await login(formData).unwrap();
+      const result = await login(data).unwrap();
       navigate(`/profile/${result.user.username}`);
     } catch (err) {
       let message = "Login failed";
 
       if (typeof err === "object" && err !== null && "data" in err) {
-        const data = (err as any).data;
-        message = data?.error || data?.message || "Login failed";
+        const errorData = err as {
+          data?: { error?: string; message?: string };
+        };
+        message =
+          errorData.data?.error || errorData.data?.message || "Login failed";
       }
       dispatch(setError(message));
     }
-  };
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
   };
 
   return (
@@ -65,22 +64,40 @@ const LoginForm = () => {
           {renderWithLineBreaks(t("loginForm.desc"))}
         </p>
       </div>
-      <form className={styles.form} onSubmit={handleSubmit}>
+      <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
         <MyInput
-          name="username"
+          {...register("username", {
+            required: t("Username is required"),
+            minLength: {
+              value: 3,
+              message: t("Username must be at least 3 characters"),
+            },
+            maxLength: {
+              value: 20,
+              message: t("Username must be at most 20 characters"),
+            },
+          })}
           placeholder="Username"
-          value={formData.username}
-          onChange={handleChange}
-        ></MyInput>
+          error={errors.username?.message}
+        />
         <MyInput
-          name="password"
+          {...register("password", {
+            required: t("Password is required"),
+            minLength: {
+              value: 6,
+              message: t("Password must be at least 6 characters"),
+            },
+            maxLength: {
+              value: 20,
+              message: t("Password must be at most 20 characters"),
+            },
+          })}
           placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
           type="password"
           showPasswordToggle={true}
-        ></MyInput>
-        {error && <div>{error}</div>}
+          error={errors.password?.message}
+        />
+        {error && <div className={styles.error}>{error}</div>}
         <MyButton type="submit" disabled={isLoading} size="FULL">
           {renderWithLineBreaks(t("loginForm.btn"))}
         </MyButton>
@@ -93,6 +110,6 @@ const LoginForm = () => {
       </div>
     </div>
   );
-};
+});
 
 export default LoginForm;
