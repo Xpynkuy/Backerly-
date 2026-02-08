@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { memo, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppSelector } from "@shared/lib/hooks/hooks.ts";
@@ -14,7 +14,7 @@ interface RegisterFormData {
   password: string;
 }
 
-const RegisterForm = () => {
+const RegisterForm = memo(() => {
   const {
     register,
     handleSubmit,
@@ -105,6 +105,6 @@ const RegisterForm = () => {
       </div>
     </div>
   );
-};
+});
 
 export default RegisterForm;
