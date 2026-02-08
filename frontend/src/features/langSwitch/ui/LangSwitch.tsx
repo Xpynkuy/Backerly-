@@ -1,8 +1,9 @@
 import MyButton from "@shared/ui/button/MyButton";
 import { Globe } from "lucide-react";
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
-export const LangSwitch = () => {
+export const LangSwitch = memo(() => {
   const { i18n } = useTranslation();
 
   const toggleLanguage = () => {
@@ -19,4 +20,4 @@ export const LangSwitch = () => {
       {i18n.language === "ru" ? "RU" : "EN"}
     </MyButton>
   );
-};
+});

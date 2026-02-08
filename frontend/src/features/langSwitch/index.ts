@@ -1,3 +1,1 @@
-import {LangSwitch} from './ui/LangSwitch'
-
-export {LangSwitch}
+export { LangSwitch } from "./ui/LangSwitch";
