@@ -6,7 +6,7 @@ export async function connectDB() {
     console.log("Подключено к БД");
     return true;
   } catch (error) {
-    console.log("❌ Ошибка подключения к БД", error);
+    console.log("Ошибка подключения к БД", error);
     throw error;
   }
 }
