@@ -2,14 +2,13 @@ import { useState } from "react";
 import {
   useAddCommentMutation,
   useGetCommentsQuery,
-  postApi,
 } from "@entities/post/model/api/postApi";
-import { useAppDispatch } from "@shared/lib/hooks/hooks";
 import MyButton from "@shared/ui/button/MyButton";
 import { MessageCircleMore } from "lucide-react";
 import styles from "./PostComment.module.scss";
 import { CommentForm } from "@features/commentForm/ui/CommentForm";
 import { CommentList } from "@entities/comment/ui/commentList/CommentList";
+import { useTranslation } from "react-i18next";
 
 interface PostCommentsProps {
   username: string;
@@ -22,40 +21,33 @@ export const PostComments = ({
   postId,
   locale,
 }: PostCommentsProps) => {
-  const dispatch = useAppDispatch();
-
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
 
-  const { data, isFetching, isError, refetch } = useGetCommentsQuery(
+  const { data, isFetching, isError } = useGetCommentsQuery(
     { postId },
-    { skip: !open }
+    { skip: !open },
   );
 
   const [addComment, { isLoading }] = useAddCommentMutation();
+  const { t } = useTranslation();
 
   const toggle = () => setOpen((p) => !p);
 
   const submit = async () => {
     if (!text.trim()) return;
 
-    const res = await addComment({ postId, text }).unwrap();
-    setText("");
+    try {
+      await addComment({
+        postId,
+        text,
+        username,
+      }).unwrap();
 
-    dispatch(
-      postApi.util.updateQueryData(
-        "getProfilePosts",
-        { username, take: 5, cursor: null },
-        (draft) => {
-          const post = draft.items.find((p) => p.id === postId);
-          if (post) {
-            post._count.comments = res.commentsCount;
-          }
-        }
-      )
-    );
-
-    await refetch();
+      setText("");
+    } catch (e) {
+      console.error("addComment failed", e);
+    }
   };
 
   return (
@@ -67,7 +59,7 @@ export const PostComments = ({
         color="TRANSPARENT"
       >
         <span className={styles.btnText}>
-          {open ? "Hide" : "Show comments"}
+          {open ? t("Hide") : t("Show comments")}
         </span>
       </MyButton>
 
