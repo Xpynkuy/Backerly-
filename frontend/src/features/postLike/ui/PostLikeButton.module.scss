@@ -1,5 +1,32 @@
-.likedHeart {
+.btnContainer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  .heart {
+    align-items: center;
+    width: 24px;
+    height: 24px;
+    stroke: currentColor;
+    fill: none;
+    transition:
+      transform 0.12s ease,
+      fill 0.12s ease;
+  }
+
+  .likedHeart {
+    width: 20px;
+    height: 20px;
+    fill: var(--red-color); /* liked color */
     stroke: none;
-    fill: currentColor;
-    color: #a30000;
+    transform: scale(1.05);
+    transition:
+      transform 0.12s ease,
+      fill 0.12s ease;
+  }
+
+  .likedCount {
+    color: var(--red-color);
+    margin-left: 6px;
+  }
 }
