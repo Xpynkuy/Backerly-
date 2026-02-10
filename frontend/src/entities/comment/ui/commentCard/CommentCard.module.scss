@@ -1,0 +1,28 @@
+.author {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+
+    .authorCommentBlock {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+
+        .authorName {
+            font: var(--font-m);
+            line-height: 0.5
+        }
+            
+        .authorText {
+            font: var(--font-s);
+            color: var(--text-color-gray);
+        }
+
+        .commentDate {
+            font: var(--font-extraSmall);
+            color: var(--text-color-gray);
+        }
+    }
+}
+
