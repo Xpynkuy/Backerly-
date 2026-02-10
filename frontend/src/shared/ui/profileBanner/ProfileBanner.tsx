@@ -1,12 +1,18 @@
-import styles from "./profileBanner.module.scss";
+import styles from "./ProfileBanner.module.scss";
 
-interface profileBannerProps {
+interface ProfileBannerProps {
   src?: string;
-  alt?: string;
 }
-const ProfileBanner = (props: profileBannerProps) => {
-  const { src, alt } = props;
-  return <img src={src} alt={alt} className={styles.banner} />;
+
+const ProfileBanner = ({ src }: ProfileBannerProps) => {
+  return (
+    <div
+      className={styles.banner}
+      style={{
+        backgroundImage: `url(${src})`,
+      }}
+    />
+  );
 };
 
 export default ProfileBanner;
