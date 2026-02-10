@@ -13,27 +13,23 @@ export const UserSearch: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  // lazy query gives us manual control
   const [trigger, { data, isFetching, isError, error }] =
     useLazySearchUsersQuery();
 
   const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState(query);
 
-  // redirect if not auth
   useEffect(() => {
     if (!isAuth) {
       navigate("/login");
     }
   }, [isAuth, navigate]);
 
-  // debounce input (300ms)
   useEffect(() => {
     const t = setTimeout(() => setDebounced(query.trim()), 300);
     return () => clearTimeout(t);
   }, [query]);
 
-  // trigger search when debounced changes and length >= 1
   useEffect(() => {
     if (!debounced) return;
     trigger({ query: debounced });
@@ -46,7 +42,7 @@ export const UserSearch: React.FC = () => {
   }
 
   {
-    isError && <div style={{ color: "red" }}>Failed to search users</div>;
+    isError && <div style={{ color: "red" }}>{t("Failed to search users")}</div>;
   }
 
   return (
