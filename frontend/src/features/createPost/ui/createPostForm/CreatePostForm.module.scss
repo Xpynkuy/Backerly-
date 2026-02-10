@@ -1,0 +1,46 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .title {
+    font: var(--font-m);
+  }
+
+  .formFieldsTitle {
+    font: var(--font-s);
+    color: var(--text-color-gray);
+  }
+
+  .select {
+    width: fit-content;
+    padding: 4px;
+    border: 1px solid var(--gray-color);
+    border-radius: var(--border-radius);
+
+    .option {
+      border-radius: var(--border-radius);
+    }
+  }
+
+  .radioContainer {
+    display: flex;
+    flex-direction: column;
+
+    .radio {
+      display: flex;
+      gap: 12px;
+
+      .radioLabel {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font: var(--font-m);
+      }
+    }
+  }
+
+  .formButton{
+    margin-top: 20px;
+  }
+}
