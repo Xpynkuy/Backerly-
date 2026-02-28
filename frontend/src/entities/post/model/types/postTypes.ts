@@ -16,6 +16,10 @@ export type Post = {
     likes: number;
     comments: number;
   };
+  locked?: boolean;
+  liked?: boolean; // NEW: whether current user liked it
+  isPaid?: boolean; // NEW
+  accessTier?: { id: string; title: string; description?: string; imageUrl?: string } | null;
 };
 
 export type PostPage = {
