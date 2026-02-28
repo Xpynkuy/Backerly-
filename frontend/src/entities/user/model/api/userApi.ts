@@ -12,6 +12,21 @@ export const userApi = baseApi.injectEndpoints({
       ],
     }),
 
+    updateDescription: builder.mutation<
+      User,
+      { username: string; description: string | null }
+    >({
+      query: ({ username, description }) => ({
+        url: `/users/${username}/description`,
+        method: "PATCH",
+        body: { description },
+      }),
+      invalidatesTags: (result, error, { username }) => [
+        { type: "User", id: username },
+        "AuthMe",
+      ],
+    }),
+
     updateAvatar: builder.mutation<User, { username: string; file: File }>({
       query: ({ username, file }) => {
         const formData = new FormData();
@@ -22,8 +37,9 @@ export const userApi = baseApi.injectEndpoints({
           body: formData,
         };
       },
-      invalidatesTags: (result, error, { username }): UserTag[] => [
+      invalidatesTags: (result, error, { username }) => [
         { type: "User", id: username },
+        "AuthMe",
       ],
     }),
 
@@ -41,6 +57,17 @@ export const userApi = baseApi.injectEndpoints({
         { type: "User", id: username },
       ],
     }),
+
+    searchUsers: builder.query<
+      { items: User[] },
+      { query: string;  }
+    >({
+      query: ({ query}) => ({
+        url: `/users/search`,
+        method: "GET",
+        params: { q: query},
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -49,4 +76,6 @@ export const {
   useGetUserByUsernameQuery,
   useUpdateAvatarMutation,
   useUpdateBannerMutation,
+  useUpdateDescriptionMutation,
+  useLazySearchUsersQuery,
 } = userApi;
