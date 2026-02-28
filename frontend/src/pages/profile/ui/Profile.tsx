@@ -1,9 +1,9 @@
-import { ProfileWidget } from "@widgets/profile";
+import { ProfileLayout } from "@widgets/profileLayout/ui/ProfileLayout";
 
 export const Profile = () => {
   return (
     <>
-      <ProfileWidget />
+      <ProfileLayout/>
     </>
   );
 };
