@@ -7,6 +7,7 @@ import {
   useDeleteTierMutation,
   useUpdateTierMutation,
 } from "../../model/api/subscriptionApi";
+import { useTranslation } from "react-i18next";
 
 interface TierCardProps {
   tier: SubscriptionTier;
@@ -19,6 +20,7 @@ export const TierCard = (props: TierCardProps) => {
   const { tier, isOwner, username, onEdit, onDelete } = props;
   const [deleteTier, { isLoading: isDeleting }] = useDeleteTierMutation();
   const [updateTier, { isLoading: isUpdating }] = useUpdateTierMutation();
+  const {t} = useTranslation()
 
   const price = tier.priceCents != null ? `${tier.priceCents / 100}` : "Free";
 
@@ -81,7 +83,7 @@ export const TierCard = (props: TierCardProps) => {
       <div className={styles.info}>
         {!isOwner && <strong className={styles.title}>{tier.title}</strong>}
 
-        <span className={styles.price}>{price} ₽ per month</span>
+        <span className={styles.price}>{price} ₽ {t("per month")}</span>
         {tier.description && <p className={styles.desc}>{tier.description}</p>}
         {!isOwner && (
           <div style={{ marginTop: 8 }}>
