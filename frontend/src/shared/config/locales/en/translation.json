@@ -7,6 +7,12 @@
     "LOG IN" : "LOG IN",
     "Logout" : "Logout",
 
+    "Profile" : "Profile",
+    "Search" : "Search",
+    "Subscriptions" : "Subscriptions",
+
+    "footer.copyright" : "All rights reserved.",
+
     
     "banner.creatorsCount": "More than 500,000 creators are here",
     "banner.title": "Your talent\nis worth money",
@@ -44,9 +50,9 @@
     "card.desc5" : "Get support from your fans directly via\ndonations",
     "card.desc6" : "Easily and effectively deliver your message\nto\nthe entire audience",
     
-    "Blog not found" : "Blog not found",
+    "Page not found" : "Page not found",
     "TO HOME PAGE" : "TO HOME PAGE",
-    "Sorry, the blog not found." : "Sorry, the blog not found.",
+    "Sorry, the page not found." : "Sorry, the page not found.",
 
 
     "registerForm.title" : "Register",
@@ -59,5 +65,77 @@
     "loginForm.desc" : "Enter your credentials to access your account",
     "loginForm.btn" : "Sign In",
     "loginForm.nav" : "Don't have ad account?",
-    "loginForm.navLink" : "Create one"
+    "loginForm.navLink" : "Create one",
+
+    "subscription.createTier" : "Create tier",
+    "subscription.level" : "Subscription level",
+    "subscription.noTiers" : "No tiers yet",
+
+    "postWidget.createPost" : "Create post",
+    "postWidget.recentPost" : "Recent posts",
+    "postWidget.postsEnd" : "There are no more posts",
+    "postWidget.noPosts" : "No posts yet",
+    "postWidget.btnMore" : "Load more",
+
+    "Enter post title": "Enter post title",
+    "Enter post description": "Enter post description",
+    "Enter post image": "Enter post image",
+    "Enter subscription levels": "Enter subscription levels",
+    "Free": "Free",
+    "Paid": "Paid",
+    "Choose access tier": "Choose access tier",
+    "Create post": "Create post",
+    "Publish": "Publish",
+    "Title is required": "Title is required",
+    "Description is required": "Description is required",
+    "Title must be at least 3 characters": "Title must be at least 3 characters",
+    "Title must be less than 60 characters": "Title must be less than 60 characters",
+    "Description must be at least 4 characters": "Description must be at least 4 characters",
+    
+    "Create subscription tier": "Create subscription tier",
+    "Enter tier title": "Enter tier title",
+    "Enter tier description": "Enter tier description",
+    "Enter tier price": "Enter tier price",
+    "Create tier": "Create tier",
+    "Price is required" : "Price is required",
+    "Reset": "Reset",
+
+
+
+    "per month" : "per month",
+
+    "Hide": "Hide",
+    "Show comments": "Show comments",
+    "No comments yet": "No comments yet",
+    "Write a comment...": "Write a comment...",
+
+
+    "Find a Creator" : "Find a Creator",
+    "Type username..." : "Type username...",
+    "Enter at least 1 character to search" : "Enter at least 1 character to search",
+    "Failed to search users" : "Failed to search users",
+    "No users found" : "No users found",
+    "Subscribe level" : "Subscribe level",
+    "Unsubscribe" : "Unsubscribe",
+    "No subscriptions yet": "No subscriptions yet",
+
+    
+    "Save" : "Save",
+    "Cancel" : "Cancel",
+    "Edit" : "Edit",
+    "Add description" : "Add description",
+    "Delete" : "Delete",
+    "Banner" : "Banner",
+
+
+    "Username is required": "Username is required",
+    "Username must be at least 3 characters": "Username must be at least 3 characters",
+    "Username must be at most 20 characters": "Username must be at most 20 characters",
+    "Password is required": "Password is required",
+    "Password must be at least 6 characters": "Password must be at least 6 characters",
+    "Password must be at most 20 characters":"Password must be at most 20 characters"
+
+
+
+
 }

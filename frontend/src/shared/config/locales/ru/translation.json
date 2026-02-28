@@ -7,6 +7,12 @@
     "LOG IN" : "ВОЙТИ",
     "Logout" : "Выйти",
 
+    "Profile" : "Профиль",
+    "Search" : "Поиск",
+    "Subscriptions" : "Подписки",
+
+    "footer.copyright" : "Все права защищены.",
+
     "banner.creatorsCount": "Более 500 000 авторов уже здесь",
     "banner.title": "Ваш талант\nстоит денег",
     "banner.description": "Лучший способ зарабатывать и общаться\nс вашей аудиторией как контент-мейкер",
@@ -14,7 +20,7 @@
 
     "section.subs" : "подписчиков на платформе",
     "section.creators" : "активных авторов",
-    "section.payments" : "донатов-платежей за год",
+    "section.payments" : "платежей за год",
 
     "How it works?" : "Как это работает?",
     "Everything’s super easy" : "Все очень просто",
@@ -43,9 +49,9 @@
     "card.desc5" : "Получай поддержку от поклонников\nнапрямую через донаты",
     "card.desc6" : "Легко и эффективно донеси информацию до\nвсей аудитории",
 
-    "Blog not found" : "Блог не найден",
+    "Page not found" : "Блог не найден",
     "TO HOME PAGE" : "НА ГЛАВНУЮ",
-    "Sorry, the blog not found." : "К сожалению, запрошенный вами блог не найден.",
+    "Sorry, the page not found." : "К сожалению, запрошенная вами страница не найдена.",
 
     "registerForm.title" : "Регистрация",
     "registerForm.desc" : "Создайте свой аккаунт. Это бесплатно и быстро",
@@ -57,5 +63,70 @@
     "loginForm.desc" : "Введите данные для создания аккаунта",
     "loginForm.btn" : "Авторизироваться",
     "loginForm.nav" : "Нет готового аккаунта?",
-    "loginForm.navLink" : "Создать новый"
+    "loginForm.navLink" : "Создать новый",
+
+    "subscription.createTier" : "Добавить подписку",
+    "subscription.level" : "Уровни подписки",
+    "subscription.noTiers" : "Уровней пока нет",
+
+    "postWidget.createPost" : "Создать пост",
+    "postWidget.recentPost" : "Последние посты",
+    "postWidget.postsEnd" : "Постов больше нет",
+    "postWidget.noPosts" : "Постов пока нет",
+    "postWidget.btnMore" : "Показать ещё",
+
+    "Enter post title": "Введите название поста",
+    "Enter post description": "Введите описание поста",
+    "Enter post image": "Добавить изображение",
+    "Enter subscription levels": "Добавить уровень подписки",
+    "Free": "Бесплатно",
+    "Paid": "Платно",
+    "Choose access tier": "Выберите уровень доступа",
+    "Create post": "Создать пост",
+    "Publish": "Опубликовать",
+    "Title is required": "Название поста обязательно",
+    "Description is required": "Описание поста обязательно",
+    "Title must be at least 3 characters": "Название должно быть больше 3 символов",
+    "Title must be less than 60 characters": "Название не может быть больше 60 символов",
+    "Description must be at least 4 characters": "Описание должно быть больше 4 символов",
+    
+    "Create subscription tier": "Создать уровень подписки",
+    "Enter tier title": "Введите название уровня",
+    "Enter tier description": "Введите описание уровня",
+    "Enter tier price": "Введите цену уровня",
+    "Create tier": "Создать",
+    "Reset" : "Сбросить",
+    "Price is required" : "Цена обязательна",
+    "per month" : "в месяц",
+
+
+    "Hide": "Скрыть",
+    "Show comments": "Показать комментарии",
+    "No comments yet": "Комментариев пока нет",
+    "Write a comment...": "Написать комментарий...",
+
+    "Find a Creator" : "Найти Креатора",
+    "Type username..." : "Введите имя...",
+    "Enter at least 1 character to search" : "Введите как минимум 1 символ для поиска",
+    "Failed to search users" : "Ошибка поиска пользователей",
+    "No users found" : "Пользователя не найдено",
+    "Subscribe level" : "Уровень подписки",
+    "Unsubscribe" : "Отписаться",
+    "No subscriptions yet": "Нет активных подписок",
+
+
+    "Save" : "Сохранить",
+    "Cancel" : "Отмена",
+    "Edit" : "Изменить",
+    "Add description" : "Добавить описание",
+    "Delete" : "Удалить",
+    "Banner" : "Обложка",
+
+    "Username is required": "Имя не может быть пустым",
+    "Username must be at least 3 characters": "Имя должно быть больше 3 символов",
+    "Username must be at most 20 characters": "Имя не может быть больше 20 символов",
+    "Password is required": "Пароль не может быть пустым",
+    "Password must be at least 6 characters": "Пароль должно быть больше 3 символов",
+    "Password must be at most 20 characters":"Пароль не может быть больше 20 символов"
+
 }
