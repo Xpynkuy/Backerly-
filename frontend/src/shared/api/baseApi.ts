@@ -12,7 +12,6 @@ const mutex = new Mutex();
 const baseQuery = fetchBaseQuery({
   baseUrl: "http://localhost:5001/api",
   credentials: "include",
-  // читаем токен из Redux state (getState) — и только потом fallback на localStorage
   prepareHeaders: (headers, { getState }) => {
     try {
       const state = (getState as any)();
@@ -48,16 +47,14 @@ const baseQueryWithReauth: BaseQueryFn<
             credentials: "include",
           },
           api,
-          extraOptions
+          extraOptions,
         );
 
         if (refreshResult.data) {
           const { accessToken } = refreshResult.data as { accessToken: string };
-          // сохраняем в localStorage и redux
           localStorage.setItem("accessToken", accessToken);
           api.dispatch(setCredentials({ accessToken }));
 
-          // повторяем первоначальный запрос
           result = await baseQuery(args, api, extraOptions);
         } else {
           api.dispatch(logout());
@@ -77,7 +74,14 @@ const baseQueryWithReauth: BaseQueryFn<
 export const baseApi = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
-  // теги: User (profile), AuthMe (me), SubscriptionStatus, Posts (by username), Tiers (by username)
-  tagTypes: ["User", "AuthMe", "SubscriptionStatus", "Posts", "Tiers"],
+  tagTypes: [
+    "User",
+    "AuthMe",
+    "SubscriptionStatus",
+    "Subscriptions",
+    "Posts",
+    "Tiers",
+    "Comments",
+  ],
   endpoints: () => ({}),
 });
