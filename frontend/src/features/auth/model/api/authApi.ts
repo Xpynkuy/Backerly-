@@ -9,6 +9,7 @@ import {
   logout,
   setCredentials,
 } from "@features/auth/model/slice/authSlice.ts";
+import type { User } from "@entities/user";
 
 export const authApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -49,8 +50,19 @@ export const authApi = baseApi.injectEndpoints({
         }
       },
     }),
+    getMe: builder.query<User, void>({
+      query: () => ({
+        url: "/auth/me",
+        method: "GET",
+      }),
+      providesTags: ["AuthMe"],
+    }),
   }),
 });
 
-export const { useLoginMutation, useRegisterMutation, useLogoutMutation } =
-  authApi;
+export const {
+  useLoginMutation,
+  useRegisterMutation,
+  useLogoutMutation,
+  useGetMeQuery,
+} = authApi;
