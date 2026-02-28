@@ -1,4 +1,4 @@
-import React, { memo, useEffect } from "react";
+import React, { memo, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { useAppSelector } from "@shared/lib/hooks/hooks.ts";
@@ -28,6 +28,7 @@ const RegisterForm = memo(() => {
   });
 
   const [registerUser, { isLoading, isSuccess }] = useRegisterMutation();
+  const [serverError, setServerError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const { t } = useTranslation();
@@ -45,10 +46,25 @@ const RegisterForm = memo(() => {
   }, [isSuccess, navigate]);
 
   const onSubmit = async (data: RegisterFormData) => {
+    setServerError(null);
     try {
       await registerUser(data).unwrap();
-    } catch (err) {
+    } catch (err: any) {
       console.log("Registration failed", err);
+      // Извлекаем ошибку из разных возможных структур ответа
+      let errorMessage = "Registration failed";
+      
+      if (err?.data?.error) {
+        errorMessage = err.data.error;
+      } else if (err?.data?.message) {
+        errorMessage = err.data.message;
+      } else if (err?.error) {
+        errorMessage = err.error;
+      } else if (err?.message) {
+        errorMessage = err.message;
+      }
+      
+      setServerError(errorMessage);
     }
   };
 
@@ -84,7 +100,7 @@ const RegisterForm = memo(() => {
             },
             maxLength: {
               value: 20,
-              message: t("Username must be less than 20 characters"),
+              message: t("Password must be less than 20 characters"),
             },
           })}
           placeholder="Password"
@@ -92,7 +108,7 @@ const RegisterForm = memo(() => {
           showPasswordToggle={true}
           error={errors.password?.message}
         />
-
+        {serverError && <div className={styles.error}>{serverError}</div>}
         <MyButton type="submit" disabled={isLoading} size="FULL">
           {renderWithLineBreaks(t("registerForm.btn"))}
         </MyButton>
