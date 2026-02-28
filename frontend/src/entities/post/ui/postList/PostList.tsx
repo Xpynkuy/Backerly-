@@ -1,15 +1,15 @@
 import type { ReactNode } from "react";
 import type { Post } from "../../model/types/postTypes";
+import styles from "./PostList.module.scss";
 
-export const PostList = ({
-  posts,
-  renderItem,
-}: {
+interface PostListProps {
   posts: Post[];
   renderItem: (post: Post) => ReactNode;
-}) => {
+}
+export const PostList = (props: PostListProps) => {
+  const { posts, renderItem } = props;
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    <div className={styles.listContainer}>
       {posts.map(renderItem)}
     </div>
   );
