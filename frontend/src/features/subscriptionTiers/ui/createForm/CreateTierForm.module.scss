@@ -1,0 +1,19 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  .title {
+    font: var(--font-m);
+  }
+  
+  .formFieldsTitle {
+    font: var(--font-s);
+    color: var(--text-color-gray);
+  }
+
+  .formButtons {
+    display: flex;
+    justify-content: space-between;
+  }
+}

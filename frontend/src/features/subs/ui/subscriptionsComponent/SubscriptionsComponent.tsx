@@ -1,4 +1,3 @@
-import { useGetSubscriptionsQuery } from "@entities/post/model/api/postApi";
 import { useAppSelector } from "@shared/lib/hooks/hooks";
 import { Loader } from "lucide-react";
 import { useEffect } from "react";
@@ -6,6 +5,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { SubscriptionCard } from "../subscriptionCard/SubscriptionCard";
 import styles from "./SubscriptionsComponent.module.scss";
 import { useTranslation } from "react-i18next";
+import { useGetSubscriptionsQuery } from "@features/subscriptionTiers/model/api/subscriptionApi";
 
 export const SubscriptionsComponent = () => {
   const authUser = useAppSelector((s) => s.auth.user);

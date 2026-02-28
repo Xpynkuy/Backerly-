@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
-import { useUnsubscribeMutation } from "@entities/post/model/api/postApi";
 import type { Subscriptions } from "../../model/types/subscriptionsTypes";
 import { useTranslation } from "react-i18next";
 import MyButton from "@shared/ui/button/MyButton";
 import Avatar from "@shared/ui/avatar/Avatar";
 import Loader from "@shared/ui/loader/Loader";
 import styles from "./SubscriptionCard.module.scss";
+import { useUnsubscribeMutation } from "@features/subscriptionTiers/model/api/subscriptionApi";
 
 const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || "http://localhost:5001";
 
