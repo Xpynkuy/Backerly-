@@ -37,4 +37,4 @@ RUN mkdir -p uploads
 EXPOSE 5001
 
 
-CMD npx prisma migrate deploy && node dist/index.js
+CMD npx prisma migrate deploy && node dist/server.js
