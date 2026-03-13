@@ -11,11 +11,22 @@ import path from "path";
 
 const app = express();
 
+const allowedOrigins =
+  process.env.NODE_ENV === "production"
+    ? ["https://backerlyproject.ru", "https://www.backerlyproject.ru"]
+    : ["http://localhost:5173", "http://localhost:3000"];
+
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
-  })
+  }),
 );
 app.use(cookieParser());
 app.use(express.json());
@@ -24,7 +35,8 @@ app.get("/health", (req, res) => {
   res.json({
     status: "OK",
     timestamp: new Date().toISOString(),
-    service: "Auth API",
+    service: "Backerly API",
+    environment: process.env.NODE_ENV,
   });
 });
 

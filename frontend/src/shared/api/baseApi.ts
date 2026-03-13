@@ -8,9 +8,9 @@ import {
 import { logout, setCredentials } from "@features/auth/model/slice/authSlice";
 
 const mutex = new Mutex();
-
+const API_BASE_URL = import.meta.env.VITE_API_ORIGIN || 'http://localhost:5001';
 const baseQuery = fetchBaseQuery({
-  baseUrl: "http://localhost:5001/api",
+  baseUrl: `${API_BASE_URL}/api`,
   credentials: "include",
   prepareHeaders: (headers, { getState }) => {
     try {

@@ -37,10 +37,12 @@ class AuthController {
         username,
         password,
       );
+      const isProduction = process.env.NODE_ENV === "production";
 
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        sameSite: "strict",
+        secure: isProduction,
+        sameSite: isProduction ? "none" : "strict",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
       res.json({ accessToken, user });
@@ -59,9 +61,12 @@ class AuthController {
 
       const tokens = await refreshTokens(refreshToken);
 
+      const isProduction = process.env.NODE_ENV === "production";
+
       res.cookie("refreshToken", tokens.refreshToken, {
         httpOnly: true,
-        sameSite: "strict",
+        secure: isProduction,
+        sameSite: isProduction ? "none" : "strict",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
@@ -80,10 +85,12 @@ class AuthController {
       if (refreshToken) {
         await logout(refreshToken);
       }
+      const isProduction = process.env.NODE_ENV === "production";
 
       res.clearCookie("refreshToken", {
         httpOnly: true,
-        sameSite: "strict",
+        secure: isProduction,
+        sameSite: isProduction ? "none" : "strict",
       });
 
       res.json({ message: "Logged out successfully" });
