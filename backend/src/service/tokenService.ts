@@ -1,3 +1,4 @@
+import prisma from "../config/prisma";
 import jwt from "jsonwebtoken";
 import {
   ACCESS_TOKEN_EXPIRES_IN,
