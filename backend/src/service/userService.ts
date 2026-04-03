@@ -36,7 +36,22 @@ export const getUserByUsername = async (
     throw new ServiceError(404, "User not found");
   }
 
-  return user;
+  const paidSubscriberCount = await prisma.subscription.count({
+    where: {
+      authorId: user.id,
+      status: "active",
+      tier: { priceCents: { gt: 0 } },
+    },
+  });
+
+  const totalSubscriberCount = await prisma.subscription.count({
+    where: {
+      authorId: user.id,
+      status: "active",
+    },
+  });
+
+  return { ...user, paidSubscriberCount, totalSubscriberCount };
 };
 
 export const updateUserDescription = async ({

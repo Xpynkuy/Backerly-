@@ -1,4 +1,5 @@
 import { DropDown } from "@features/dropDown";
+import { NotificationBell } from "@features/notifications";
 import styles from "./Header.module.scss";
 import { LangSwitch } from "@features/langSwitch";
 
@@ -10,6 +11,7 @@ const MainHeader = () => {
       </a>
       <div className={styles.nav__btn}>
         <LangSwitch />
+        <NotificationBell />
         <DropDown />
       </div>
     </header>

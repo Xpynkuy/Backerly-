@@ -22,6 +22,14 @@
   font: var(--font-l);
 }
 
+.subscriberStats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: var(--font-s);
+  color: var(--text-color-gray);
+}
+
 .desc {
   font: var(--font-s);
   color: var(--text-color-gray);

@@ -2,7 +2,6 @@ import prisma from "../config/prisma";
 import { savePost } from "../lib/imageProcessing";
 import { deleteFile } from "../lib/files";
 import {
-  ServiceError,
   UnauthorizedError,
   ForbiddenError,
   NotFoundError,
@@ -25,6 +24,23 @@ import {
   SubscribeResponse,
 } from "../types/subscriptionTypes";
 
+const SUBSCRIPTION_DURATION_DAYS = 30;
+
+function addDays(date: Date, days: number): Date {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
+function isSubscriptionActive(sub: {
+  status: string;
+  expiresAt: Date | null;
+}): boolean {
+  if (sub.status !== "active") return false;
+  if (!sub.expiresAt) return true;
+  return new Date() < sub.expiresAt;
+}
+
 export const fetchTiersByUsername = async ({
   username,
 }: FetchTiersByUsernameParams): Promise<TiersResponse> => {
@@ -37,10 +53,37 @@ export const fetchTiersByUsername = async ({
 
   const tiers = await prisma.subscriptionTier.findMany({
     where: { authorId: user.id, isActive: true },
-    orderBy: { createdAt: "desc" },
+    orderBy: [
+      { priceCents: "asc" },
+      { sortOrder: "asc" },
+      { createdAt: "asc" },
+    ],
+    include: {
+      _count: {
+        select: {
+          subscriptions: {
+            where: { status: "active" },
+          },
+        },
+      },
+    },
   });
 
-  return { items: tiers as TierDto[] };
+  const items: TierDto[] = tiers.map((t) => ({
+    id: t.id,
+    authorId: t.authorId,
+    title: t.title,
+    description: t.description,
+    imageUrl: t.imageUrl,
+    priceCents: t.priceCents,
+    sortOrder: t.sortOrder,
+    isActive: t.isActive,
+    createdAt: t.createdAt,
+    updatedAt: t.updatedAt,
+    subscriberCount: t._count.subscriptions,
+  }));
+
+  return { items };
 };
 
 export const createTierForUser = async ({
@@ -49,6 +92,7 @@ export const createTierForUser = async ({
   title,
   description,
   priceCents,
+  sortOrder,
   fileBuffer,
 }: CreateTierParams): Promise<TierDto> => {
   if (!authUserId) throw new UnauthorizedError();
@@ -64,6 +108,14 @@ export const createTierForUser = async ({
 
   const imageUrl = fileBuffer ? await savePost(fileBuffer) : null;
 
+  let order = sortOrder ?? 0;
+  if (!sortOrder && priceCents) {
+    const existingTiers = await prisma.subscriptionTier.count({
+      where: { authorId: author.id, isActive: true },
+    });
+    order = existingTiers + 1;
+  }
+
   const tier = await prisma.subscriptionTier.create({
     data: {
       authorId: author.id,
@@ -71,10 +123,11 @@ export const createTierForUser = async ({
       description: description?.trim() ?? null,
       imageUrl,
       priceCents: priceCents ?? null,
+      sortOrder: order,
     },
   });
 
-  return tier as TierDto;
+  return { ...tier, subscriberCount: 0 } as TierDto;
 };
 
 export const updateTierById = async ({
@@ -84,6 +137,7 @@ export const updateTierById = async ({
   title,
   description,
   priceCents,
+  sortOrder,
   fileBuffer,
 }: UpdateTierParams): Promise<TierDto> => {
   if (!authUserId) throw new UnauthorizedError();
@@ -115,16 +169,41 @@ export const updateTierById = async ({
     where: { id: tierId },
     data: {
       title: title?.trim() ?? tier.title,
-      description: description ?? tier.description,
+      description: description !== undefined ? description : tier.description,
       priceCents:
         priceCents !== undefined && priceCents !== null
           ? Number(priceCents)
           : tier.priceCents,
+      sortOrder:
+        sortOrder !== undefined && sortOrder !== null
+          ? Number(sortOrder)
+          : tier.sortOrder,
       imageUrl,
+    },
+    include: {
+      _count: {
+        select: {
+          subscriptions: {
+            where: { status: "active" },
+          },
+        },
+      },
     },
   });
 
-  return updated as TierDto;
+  return {
+    id: updated.id,
+    authorId: updated.authorId,
+    title: updated.title,
+    description: updated.description,
+    imageUrl: updated.imageUrl,
+    priceCents: updated.priceCents,
+    sortOrder: updated.sortOrder,
+    isActive: updated.isActive,
+    createdAt: updated.createdAt,
+    updatedAt: updated.updatedAt,
+    subscriberCount: updated._count.subscriptions,
+  };
 };
 
 export const deleteTierById = async ({
@@ -151,10 +230,14 @@ export const deleteTierById = async ({
     throw new ForbiddenError();
   }
 
-  // Remove tier from posts (make them free)
   await prisma.post.updateMany({
     where: { accessTierId: tierId },
     data: { isPaid: false, accessTierId: null },
+  });
+
+  await prisma.subscription.updateMany({
+    where: { tierId, status: "active" },
+    data: { status: "cancelled", cancelledAt: new Date() },
   });
 
   if (tier.imageUrl) {
@@ -182,32 +265,73 @@ export const subscribeToAuthorService = async ({
     throw new BadRequestError("Cannot subscribe to yourself");
   }
 
+  if (tierId) {
+    const tier = await prisma.subscriptionTier.findUnique({
+      where: { id: tierId },
+      select: { authorId: true, isActive: true },
+    });
+    if (!tier || tier.authorId !== author.id) {
+      throw new BadRequestError("Invalid tier");
+    }
+    if (!tier.isActive) {
+      throw new BadRequestError("This tier is no longer available");
+    }
+  }
+
+  const now = new Date();
+  const expiresAt = addDays(now, SUBSCRIPTION_DURATION_DAYS);
+
   const existing = await prisma.subscription.findFirst({
     where: { subscriberId: authUserId, authorId: author.id },
   });
 
   if (existing) {
+    const updateData: any = {
+      tierId: tierId ?? null,
+      status: "active",
+      cancelledAt: null,
+    };
+
+    if (!isSubscriptionActive(existing)) {
+      updateData.startDate = now;
+      updateData.expiresAt = expiresAt;
+    } else if (existing.tierId !== tierId) {
+    }
+
     await prisma.subscription.update({
       where: { id: existing.id },
-      data: { tierId: tierId ?? null },
+      data: updateData,
     });
-  } else {
-    await prisma.subscription.create({
-      data: {
-        subscriberId: authUserId,
-        authorId: author.id,
-        tierId: tierId ?? null,
-      },
-    });
+
+    return {
+      subscribed: true,
+      status: "active",
+      expiresAt:
+        (updateData.expiresAt ?? existing.expiresAt)?.toISOString() ?? null,
+    };
   }
 
-  return { subscribed: true };
+  const sub = await prisma.subscription.create({
+    data: {
+      subscriberId: authUserId,
+      authorId: author.id,
+      tierId: tierId ?? null,
+      status: "active",
+      startDate: now,
+      expiresAt,
+    },
+  });
+
+  return {
+    subscribed: true,
+    status: "active",
+    expiresAt: sub.expiresAt?.toISOString() ?? null,
+  };
 };
 
 export const unsubscribeFromAuthorService = async ({
   username,
   authUserId,
-  tierId,
 }: UnsubscribeParams): Promise<SubscribeResponse> => {
   if (!authUserId) throw new UnauthorizedError();
 
@@ -218,22 +342,43 @@ export const unsubscribeFromAuthorService = async ({
 
   if (!author) throw new NotFoundError("User not found");
 
-  await prisma.subscription.deleteMany({
-    where: {
-      subscriberId: authUserId,
-      authorId: author.id,
-      ...(tierId ? { tierId } : {}),
+  const existing = await prisma.subscription.findFirst({
+    where: { subscriberId: authUserId, authorId: author.id },
+  });
+
+  if (!existing) {
+    return { subscribed: false, status: "none", expiresAt: null };
+  }
+
+  await prisma.subscription.update({
+    where: { id: existing.id },
+    data: {
+      status: "cancelled",
+      cancelledAt: new Date(),
     },
   });
 
-  return { subscribed: false };
+  return {
+    subscribed: false,
+    status: "cancelled",
+    expiresAt: existing.expiresAt?.toISOString() ?? null,
+  };
 };
 
 export const getSubscriptionStatusService = async ({
   username,
   authUserId,
 }: GetSubscriptionStatusParams): Promise<SubscriptionStatusResponse> => {
-  if (!authUserId) return { subscribed: false, tierId: null };
+  const empty: SubscriptionStatusResponse = {
+    subscribed: false,
+    tierId: null,
+    tierTitle: null,
+    tierPriceCents: null,
+    status: null,
+    expiresAt: null,
+  };
+
+  if (!authUserId) return empty;
 
   const author = await prisma.user.findUnique({
     where: { username },
@@ -244,12 +389,33 @@ export const getSubscriptionStatusService = async ({
 
   const sub = await prisma.subscription.findFirst({
     where: { subscriberId: authUserId, authorId: author.id },
-    select: { tierId: true },
+    include: {
+      tier: { select: { id: true, title: true, priceCents: true } },
+    },
   });
 
-  if (!sub) return { subscribed: false, tierId: null };
+  if (!sub) return empty;
 
-  return { subscribed: true, tierId: sub.tierId ?? null };
+  const active = isSubscriptionActive(sub);
+
+  if (sub.status === "active" && !active) {
+    await prisma.subscription.update({
+      where: { id: sub.id },
+      data: { status: "expired" },
+    });
+  }
+
+  const effectiveStatus =
+    sub.status === "active" && !active ? "expired" : sub.status;
+
+  return {
+    subscribed: effectiveStatus === "active" || effectiveStatus === "cancelled",
+    tierId: sub.tierId ?? null,
+    tierTitle: sub.tier?.title ?? null,
+    tierPriceCents: sub.tier?.priceCents ?? null,
+    status: effectiveStatus,
+    expiresAt: sub.expiresAt?.toISOString() ?? null,
+  };
 };
 
 export const fetchSubscriptionsByUsername = async ({
@@ -262,8 +428,6 @@ export const fetchSubscriptionsByUsername = async ({
   });
 
   if (!user) throw new NotFoundError("User not found");
-
-  // Only owner can view their subscriptions
   if (user.id !== authUserId) {
     throw new ForbiddenError("You can only view your own subscriptions");
   }
@@ -282,10 +446,21 @@ export const fetchSubscriptionsByUsername = async ({
         },
       },
       tier: {
-        select: { id: true, title: true },
+        select: { id: true, title: true, priceCents: true },
       },
     },
   });
+
+  const now = new Date();
+  for (const s of subs) {
+    if (s.status === "active" && s.expiresAt && now >= s.expiresAt) {
+      await prisma.subscription.update({
+        where: { id: s.id },
+        data: { status: "expired" },
+      });
+      s.status = "expired";
+    }
+  }
 
   const items: SubscribedAuthorDto[] = subs.map((s) => ({
     id: s.author.id,
@@ -295,6 +470,11 @@ export const fetchSubscriptionsByUsername = async ({
     description: s.author.description ?? null,
     tierId: s.tierId ?? null,
     tierTitle: s.tier?.title ?? null,
+    tierPriceCents: s.tier?.priceCents ?? null,
+    status: s.status,
+    startDate: s.startDate.toISOString(),
+    expiresAt: s.expiresAt?.toISOString() ?? null,
+    cancelledAt: s.cancelledAt?.toISOString() ?? null,
   }));
 
   return { items };

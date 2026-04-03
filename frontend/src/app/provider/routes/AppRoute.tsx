@@ -9,6 +9,7 @@ import { Profile } from "@pages/profile";
 import { NotFoundPage } from "@pages/notFoundPage";
 import { SearchPage } from "@pages/search";
 import { SubscriptionsPage } from "@pages/subscriptions";
+import { FeedPage } from "@pages/feed";
 
 const AppRoute = () => {
   return (
@@ -37,6 +38,14 @@ const AppRoute = () => {
           element={
             <ProtectedRoute>
               <SubscriptionsPage />
+            </ProtectedRoute>
+          }
+        ></Route>
+        <Route
+          path="/feed"
+          element={
+            <ProtectedRoute>
+              <FeedPage />
             </ProtectedRoute>
           }
         ></Route>

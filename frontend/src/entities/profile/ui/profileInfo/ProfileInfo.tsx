@@ -4,7 +4,8 @@ import MyButton from "@shared/ui/button/MyButton";
 import { useUpdateAvatarMutation } from "@entities/user/model/api/userApi";
 import { useRef, type ReactNode } from "react";
 import type { User } from "@entities/user";
-import { Camera } from "lucide-react";
+import { Camera, Users } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface ProfileInfoProps {
   user: User;
@@ -21,6 +22,7 @@ export const ProfileInfo = ({
 }: ProfileInfoProps) => {
   const [updateAvatar, { isLoading }] = useUpdateAvatarMutation();
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  const { t } = useTranslation();
 
   const pickAvatar = () => avatarInputRef.current?.click();
 
@@ -63,6 +65,19 @@ export const ProfileInfo = ({
       </div>
 
       <h3 className={styles.username}>{user.username}</h3>
+
+      {(user.totalSubscriberCount != null && user.totalSubscriberCount > 0) && (
+        <div className={styles.subscriberStats}>
+          <Users size={16} />
+          <span>
+            {user.totalSubscriberCount} {t("profile.subscribers")}
+            {user.paidSubscriberCount != null && user.paidSubscriberCount > 0 && (
+              <> · {user.paidSubscriberCount} {t("profile.paidSubscribers")}</>
+            )}
+          </span>
+        </div>
+      )}
+
       <div className={styles.desc}>{descriptionSlot}</div>
     </div>
   );

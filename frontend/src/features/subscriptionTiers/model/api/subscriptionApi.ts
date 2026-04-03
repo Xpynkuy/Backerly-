@@ -1,5 +1,5 @@
 import { baseApi } from "@shared/api/baseApi";
-import type { SubscriptionTier, SubscriptionUser } from "../types/types";
+import type { SubscriptionTier, SubscriptionStatus, SubscriptionUser } from "../types/types";
 
 export const subscriptionApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -68,7 +68,7 @@ export const subscriptionApi = baseApi.injectEndpoints({
     }),
 
     subscribe: builder.mutation<
-      { subscribed: boolean },
+      { subscribed: boolean; status: string; expiresAt: string | null },
       { username: string; tierId?: string | null }
     >({
       query: ({ username, tierId }) => ({
@@ -84,13 +84,12 @@ export const subscriptionApi = baseApi.injectEndpoints({
     }),
 
     unsubscribe: builder.mutation<
-      { subscribed: boolean },
-      { username: string; tierId?: string | null }
+      { subscribed: boolean; status: string; expiresAt: string | null },
+      { username: string }
     >({
-      query: ({ username, tierId }) => ({
+      query: ({ username }) => ({
         url: `/users/${username}/unsubscribe`,
         method: "POST",
-        body: tierId ? { tierId } : undefined,
       }),
       invalidatesTags: (_r, _e, { username }) => [
         { type: "SubscriptionStatus" as const, id: username },
@@ -100,7 +99,7 @@ export const subscriptionApi = baseApi.injectEndpoints({
     }),
 
     getSubscriptionStatus: builder.query<
-      { subscribed: boolean; tierId: string | null },
+      SubscriptionStatus,
       { username: string }
     >({
       query: ({ username }) => ({

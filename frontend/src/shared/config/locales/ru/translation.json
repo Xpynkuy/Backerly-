@@ -23,7 +23,7 @@
     "section.payments" : "платежей за год",
 
     "How it works?" : "Как это работает?",
-    "Everything’s super easy" : "Все очень просто",
+    "Everything's super easy" : "Все очень просто",
     "Step 1" : "Шаг 1",
     "Step 2" : "Шаг 2",
     "Step 3" : "Шаг 3",
@@ -84,8 +84,8 @@
     "Choose access tier": "Выберите уровень доступа",
     "Create post": "Создать пост",
     "Publish": "Опубликовать",
-    "Title is required": "Название поста обязательно",
-    "Description is required": "Описание поста обязательно",
+    "Title is required": "Название обязательно",
+    "Description is required": "Описание обязательно",
     "Title must be at least 3 characters": "Название должно быть больше 3 символов",
     "Title must be less than 60 characters": "Название не может быть больше 60 символов",
     "Description must be at least 4 characters": "Описание должно быть больше 4 символов",
@@ -97,13 +97,13 @@
     "Create tier": "Создать",
     "Reset" : "Сбросить",
     "Price is required" : "Цена обязательна",
+    "Price must be greater than 0" : "Цена должна быть больше 0",
     "per month" : "в месяц",
-
 
     "Hide": "Скрыть",
     "Show comments": "Показать комментарии",
     "No comments yet": "Комментариев пока нет",
-    "Write a comment...": "Написать комментарий...",
+    "Write a comment...": "Написать комментарий...",
 
     "Find a Creator" : "Найти Креатора",
     "Type username..." : "Введите имя...",
@@ -113,7 +113,6 @@
     "Subscribe level" : "Уровень подписки",
     "Unsubscribe" : "Отписаться",
     "No subscriptions yet": "Нет активных подписок",
-
 
     "Save" : "Сохранить",
     "Cancel" : "Отмена",
@@ -127,6 +126,55 @@
     "Username must be at most 20 characters": "Имя не может быть больше 20 символов",
     "Password is required": "Пароль не может быть пустым",
     "Password must be at least 6 characters": "Пароль должно быть больше 3 символов",
-    "Password must be at most 20 characters":"Пароль не может быть больше 20 символов"
+    "Password must be at most 20 characters":"Пароль не может быть больше 20 символов",
 
+    "tier.subscribers": "подписчиков",
+    "tier.yourTier": "Ваш текущий уровень",
+    "tier.deleteConfirm": "Удалить уровень? Посты, привязанные к этому уровню, станут бесплатными.",
+    "tier.deleteFailed": "Ошибка удаления",
+    "tier.editTitle": "Редактировать уровень подписки",
+    "tier.invalidPrice": "Некорректная цена",
+    "tier.updateFailed": "Ошибка обновления",
+
+    "sub.subscribe": "Подписаться",
+    "sub.unsubscribe": "Отписаться",
+    "sub.upgrade": "Повысить уровень",
+    "sub.downgrade": "Понизить уровень",
+    "sub.resubscribe": "Подписаться снова",
+    "sub.renew": "Продлить",
+
+    "sub.subscribeTitle": "Подтверждение подписки",
+    "sub.upgradeTitle": "Повышение уровня подписки",
+    "sub.downgradeTitle": "Изменение подписки",
+    "sub.unsubscribeTitle": "Отмена подписки",
+    "sub.unsubscribeDesc": "Ваша подписка будет отменена. Доступ сохранится до конца текущего оплаченного периода.",
+    "sub.confirmUnsubscribe": "Подтвердить отмену",
+    "sub.confirmPayment": "Подтвердить оплату",
+    "sub.accessUntil": "Доступ до",
+    "sub.renewDate": "Следующее продление",
+
+    "sub.paymentMethod": "Способ оплаты",
+    "sub.total": "Итого",
+
+    "sub.statusActive": "Активна",
+    "sub.statusCancelled": "Отменена",
+    "sub.statusExpired": "Истекла",
+
+    "profile.subscribers": "подписчиков",
+    "profile.paidSubscribers": "платных",
+
+    "notif.title": "Уведомления",
+    "notif.empty": "Уведомлений пока нет",
+    "notif.justNow": "только что",
+    "notif.minAgo": "мин назад",
+    "notif.hAgo": "ч назад",
+    "notif.dAgo": "д назад",
+
+    "editPost.title": "Редактировать пост",
+    "editPost.failed": "Ошибка обновления",
+    "editPost.hasImage": "Текущее изображение прикреплено",
+    "editPost.removeImage": "Удалить",
+
+    "Feed": "Лента",
+    "feed.empty": "Ваша лента пуста.\nПодпишитесь на авторов, чтобы видеть их посты здесь."
 }

@@ -4,7 +4,7 @@ import {
   useGetMeQuery,
   useLogoutMutation,
 } from "@features/auth/model/api/authApi";
-import { BadgeDollarSign, LogOut, Search, User } from "lucide-react";
+import { BadgeDollarSign, LogOut, Search, User, Rss } from "lucide-react";
 import { AppLink } from "@shared/ui/AppLink/AppLink";
 import Avatar from "@shared/ui/avatar/Avatar";
 import MyButton from "@shared/ui/button/MyButton";
@@ -62,6 +62,14 @@ export function DropDown() {
           {() => (
             <AppLink icon={<BadgeDollarSign size={18} />} to="/subscriptions">
               {t("Subscriptions")}
+            </AppLink>
+          )}
+        </MenuItem>
+
+        <MenuItem>
+          {() => (
+            <AppLink icon={<Rss size={18} />} to="/feed">
+              {t("Feed")}
             </AppLink>
           )}
         </MenuItem>

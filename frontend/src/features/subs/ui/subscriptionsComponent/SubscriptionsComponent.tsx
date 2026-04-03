@@ -1,11 +1,11 @@
 import { useAppSelector } from "@shared/lib/hooks/hooks";
-import { Loader } from "lucide-react";
 import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { SubscriptionCard } from "../subscriptionCard/SubscriptionCard";
 import styles from "./SubscriptionsComponent.module.scss";
 import { useTranslation } from "react-i18next";
 import { useGetSubscriptionsQuery } from "@features/subscriptionTiers/model/api/subscriptionApi";
+import Loader from "@shared/ui/loader/Loader";
 
 export const SubscriptionsComponent = () => {
   const authUser = useAppSelector((s) => s.auth.user);
@@ -21,25 +21,24 @@ export const SubscriptionsComponent = () => {
     }
   }, [isAuth, navigate]);
 
+  const { data, isFetching, isError, refetch } = useGetSubscriptionsQuery(
+    { username: username! },
+    { skip: !username },
+  );
+
   if (!username) return <div>Username missing</div>;
 
-  const { data, isFetching, isError, refetch } = useGetSubscriptionsQuery({
-    username,
-  });
-
   const items = data?.items ?? [];
-
-  {
-    isFetching && <Loader />;
-  }
-
-  {
-    isError && <div style={{ color: "red" }}>Failed to load subscriptions</div>;
-  }
 
   return (
     <div className={styles.listContainer}>
       <h2 className={styles.title}>{t("Subscriptions")}</h2>
+
+      {isFetching && <Loader />}
+
+      {isError && (
+        <div style={{ color: "red" }}>Failed to load subscriptions</div>
+      )}
 
       {!isFetching && items.length === 0 && (
         <div className={styles.notif}>{t("No subscriptions yet")}</div>
@@ -48,9 +47,9 @@ export const SubscriptionsComponent = () => {
       <div className={styles.list}>
         {items.map((it) => (
           <SubscriptionCard
-            key={it.id}
+            key={it.id + (it.tierId ?? "")}
             item={it}
-            onUnsubscribed={() => refetch()}
+            onChanged={() => refetch()}
           />
         ))}
       </div>

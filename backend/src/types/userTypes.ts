@@ -5,6 +5,8 @@ export interface UserProfileDto {
   avatarUrl: string | null;
   bannerUrl: string | null;
   description: string | null;
+  paidSubscriberCount?: number;
+  totalSubscriberCount?: number;
 }
 
 export interface SearchResultDto {

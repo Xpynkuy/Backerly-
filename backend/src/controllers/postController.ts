@@ -3,6 +3,8 @@ import {
   fetchPostsByUsername,
   createPostForUser,
   deletePostById,
+  updatePostById,
+  fetchFeed,
   toggleLikeForPost,
   getCommentsForPost,
   addCommentToPost,
@@ -150,6 +152,58 @@ export const addComment = async (
     });
 
     return res.status(201).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updatePost = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const authUserId = getAuthUserId(req);
+    if (!authUserId) throw new UnauthorizedError();
+
+    const postId = req.params.id;
+    const { title, description } = req.body;
+    const isPaid = req.body.isPaid !== undefined ? parseBoolean(req.body.isPaid) : undefined;
+    const accessTierId = (req.body.accessTierId as string | undefined) ?? null;
+    const removeImage = parseBoolean(req.body.removeImage);
+    const fileBuffer = req.file?.buffer;
+
+    const updated = await updatePostById({
+      postId,
+      authUserId,
+      title,
+      description,
+      isPaid,
+      accessTierId,
+      fileBuffer,
+      removeImage,
+    });
+
+    return res.json(updated);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getFeed = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const authUserId = getAuthUserId(req);
+    if (!authUserId) throw new UnauthorizedError();
+
+    const take = parsePositiveInt(req.query.take, 10, 1, 30);
+    const cursor = (req.query.cursor as string | undefined) ?? undefined;
+
+    const result = await fetchFeed({ authUserId, take, cursor });
+    return res.json(result);
   } catch (error) {
     next(error);
   }

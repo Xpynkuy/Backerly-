@@ -32,7 +32,7 @@ export const createTier = async (req: Request, res: Response) => {
     if (!authUserId) return res.status(401).json({ error: "Unauthorized" });
 
     const { username } = req.params;
-    const { title, description, priceCents } = req.body;
+    const { title, description, priceCents, sortOrder } = req.body;
 
     if (!title?.trim()) {
       return res.status(400).json({ error: "Title is required" });
@@ -46,6 +46,7 @@ export const createTier = async (req: Request, res: Response) => {
       title,
       description,
       priceCents: priceCents !== undefined ? Number(priceCents) : null,
+      sortOrder: sortOrder !== undefined ? Number(sortOrder) : null,
       fileBuffer: fileBuffer ?? null,
     });
 
@@ -65,7 +66,7 @@ export const updateTier = async (req: Request, res: Response) => {
     if (!authUserId) return res.status(401).json({ error: "Unauthorized" });
 
     const { username, tierId } = req.params;
-    const { title, description, priceCents } = req.body;
+    const { title, description, priceCents, sortOrder } = req.body;
     const fileBuffer = req.file?.buffer;
 
     const updated = await updateTierById({
@@ -77,6 +78,10 @@ export const updateTier = async (req: Request, res: Response) => {
       priceCents:
         priceCents !== undefined && priceCents !== null
           ? Number(priceCents)
+          : undefined,
+      sortOrder:
+        sortOrder !== undefined && sortOrder !== null
+          ? Number(sortOrder)
           : undefined,
       fileBuffer: fileBuffer ?? null,
     });
@@ -140,12 +145,10 @@ export const unsubscribeFromAuthor = async (req: Request, res: Response) => {
     if (!authUserId) return res.status(401).json({ error: "Unauthorized" });
 
     const { username } = req.params;
-    const { tierId } = req.body as { tierId?: string };
 
     const result = await unsubscribeFromAuthorService({
       username,
       authUserId,
-      tierId: tierId ?? null,
     });
 
     return res.json(result);

@@ -8,9 +8,12 @@ import { useTranslation } from "react-i18next";
 import { getDateLocale } from "@shared/lib/I18n/getDateLocale";
 import { renderWithLineBreaks } from "@shared/lib/utils/renderWithLineBreaks";
 import { CreatePostModal } from "@features/createPost";
+import { EditPostModal } from "@features/editPost";
 import MyButton from "@shared/ui/button/MyButton";
 import Loader from "@shared/ui/loader/Loader";
 import { PostDeleteButton } from "@features/postDelete";
+import { Settings } from "lucide-react";
+import type { Post } from "@entities/post/model/types/postTypes";
 import styles from "./PostWidget.module.scss";
 
 interface PostWidgetProps {
@@ -21,6 +24,7 @@ interface PostWidgetProps {
 export const PostsWidget = memo((props: PostWidgetProps) => {
   const { username, isMyProfile } = props;
   const [isCreateModalOpen, setCreateModalOpen] = useState(false);
+  const [editingPost, setEditingPost] = useState<Post | null>(null);
   const { t, i18n } = useTranslation();
   const PAGE_SIZE = 5;
   const [trigger, { data, isFetching, isError }] =
@@ -67,6 +71,19 @@ export const PostsWidget = memo((props: PostWidgetProps) => {
               setCreateModalOpen(false);
             }}
           />
+
+          {editingPost && (
+            <EditPostModal
+              isOpen={!!editingPost}
+              onClose={() => setEditingPost(null)}
+              username={username}
+              post={editingPost}
+              onUpdated={() => {
+                reloadFirstPage();
+                setEditingPost(null);
+              }}
+            />
+          )}
         </>
       )}
 
@@ -88,7 +105,16 @@ export const PostsWidget = memo((props: PostWidgetProps) => {
                   liked={post.liked}
                 />
                 {isMyProfile && (
-                  <PostDeleteButton username={username} postId={post.id} />
+                  <div style={{ display: "flex", gap: 4 }}>
+                    <MyButton
+                      size="AUTO"
+                      color="TRANSPARENT"
+                      onClick={() => setEditingPost(post)}
+                    >
+                      <Settings size={22} />
+                    </MyButton>
+                    <PostDeleteButton username={username} postId={post.id} />
+                  </div>
                 )}
               </>
             }

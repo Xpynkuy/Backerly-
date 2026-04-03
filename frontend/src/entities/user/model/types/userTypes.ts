@@ -5,4 +5,6 @@ export interface User {
   avatarUrl?: string | null;
   bannerUrl?: string | null;
   description?: string | null;
+  paidSubscriberCount?: number;
+  totalSubscriberCount?: number;
 }

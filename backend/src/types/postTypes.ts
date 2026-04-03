@@ -88,3 +88,20 @@ export interface AddCommentResult {
 export interface CommentsResponse {
   items: CommentDto[];
 }
+
+export interface UpdatePostParams {
+  postId: string;
+  authUserId: string;
+  title?: string | null;
+  description?: string | null;
+  isPaid?: boolean;
+  accessTierId?: string | null;
+  fileBuffer?: Buffer | null;
+  removeImage?: boolean;
+}
+
+export interface FetchFeedParams {
+  authUserId: string;
+  take: number;
+  cursor?: string;
+}

@@ -5,68 +5,106 @@ import { TierList } from "@features/subscriptionTiers/ui/tierList/TierList";
 import MyButton from "@shared/ui/button/MyButton";
 import { useTranslation } from "react-i18next";
 import { renderWithLineBreaks } from "@shared/lib/utils/renderWithLineBreaks";
-import { useGetTiersQuery } from "@features/subscriptionTiers/model/api/subscriptionApi";
+import {
+  useGetTiersQuery,
+  useGetSubscriptionStatusQuery,
+} from "@features/subscriptionTiers/model/api/subscriptionApi";
+import type { SubscriptionTier } from "@features/subscriptionTiers/model/types/types";
 import styles from "./SubscriptionWidget.module.scss";
+import { EditTierModal } from "@features/subscriptionTiers";
 
 interface SubscriptionTiersWidgetProps {
   username: string;
   isMyProfile: boolean;
 }
 
-export const SubscriptionTiersWidget = memo(({
-  username,
-  isMyProfile,
-}: SubscriptionTiersWidgetProps) => {
-  const { data, isFetching, isError, refetch } = useGetTiersQuery({ username });
-  const tiers = data?.items ?? [];
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const { t } = useTranslation();
+export const SubscriptionTiersWidget = memo(
+  ({ username, isMyProfile }: SubscriptionTiersWidgetProps) => {
+    const {
+      data,
+      isFetching,
+      isError,
+      refetch,
+    } = useGetTiersQuery({ username });
+    const tiers = data?.items ?? [];
 
-  const handleCreated = useCallback(() => {
-    refetch();
-    setIsCreateOpen(false);
-  }, [refetch]);
+    const { data: subStatus } = useGetSubscriptionStatusQuery(
+      { username },
+      { skip: isMyProfile },
+    );
 
-  if (isError) return <div>Failed to load tiers</div>;
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [editingTier, setEditingTier] = useState<SubscriptionTier | null>(
+      null,
+    );
+    const { t } = useTranslation();
 
-  return (
-    <div className={styles.container}>
-      {isMyProfile && (
-        <>
-          <MyButton size="FULL" onClick={() => setIsCreateOpen(true)}>
-            {renderWithLineBreaks(t("subscription.createTier"))}
-          </MyButton>
+    const handleCreated = useCallback(() => {
+      refetch();
+      setIsCreateOpen(false);
+    }, [refetch]);
 
-          <CreateTierModal
-            isOpen={isCreateOpen}
-            onClose={() => setIsCreateOpen(false)}
-            username={username}
-            onCreated={handleCreated}
-          />
-        </>
-      )}
+    const handleUpdated = useCallback(() => {
+      refetch();
+      setEditingTier(null);
+    }, [refetch]);
 
-      <h3>{renderWithLineBreaks(t("subscription.level"))}</h3>
+    if (isError) return <div>Failed to load tiers</div>;
 
-      {isFetching && tiers.length === 0 && <div>Loading...</div>}
+    return (
+      <div className={styles.container}>
+        {isMyProfile && (
+          <>
+            <MyButton size="FULL" onClick={() => setIsCreateOpen(true)}>
+              {renderWithLineBreaks(t("subscription.createTier"))}
+            </MyButton>
 
-      <TierList
-        tiers={tiers}
-        renderItem={(tier) => (
-          <TierCard
-            key={tier.id}
-            tier={tier}
-            isOwner={isMyProfile}
-            username={username}
-            onDelete={refetch}
-            onEdit={refetch}
-          />
+            <CreateTierModal
+              isOpen={isCreateOpen}
+              onClose={() => setIsCreateOpen(false)}
+              username={username}
+              onCreated={handleCreated}
+            />
+
+            {editingTier && (
+              <EditTierModal
+                isOpen={!!editingTier}
+                onClose={() => setEditingTier(null)}
+                username={username}
+                tier={editingTier}
+                onUpdated={handleUpdated}
+              />
+            )}
+          </>
         )}
-      />
 
-      {tiers.length === 0 && !isFetching && (
-        <div>{renderWithLineBreaks(t("subscription.noTiers"))}</div>
-      )}
-    </div>
-  );
-});
+        <h3>{renderWithLineBreaks(t("subscription.level"))}</h3>
+
+        {isFetching && tiers.length === 0 && <div>Loading...</div>}
+
+        <TierList
+          tiers={tiers}
+          renderItem={(tier) => (
+            <TierCard
+              key={tier.id}
+              tier={tier}
+              isOwner={isMyProfile}
+              username={username}
+              isCurrentTier={
+                !isMyProfile &&
+                subStatus?.subscribed === true &&
+                subStatus?.tierId === tier.id
+              }
+              onDelete={refetch}
+              onEdit={(t) => setEditingTier(t)}
+            />
+          )}
+        />
+
+        {tiers.length === 0 && !isFetching && (
+          <div>{renderWithLineBreaks(t("subscription.noTiers"))}</div>
+        )}
+      </div>
+    );
+  },
+);

@@ -7,6 +7,8 @@ import {
   CreatePostParams,
   FetchPostsParams,
   DeletePostParams,
+  UpdatePostParams,
+  FetchFeedParams,
   ToggleLikeParams,
   AddCommentParams,
   GetCommentsParams,
@@ -49,7 +51,7 @@ export const fetchPostsByUsername = async ({
       createdAt: true,
       isPaid: true,
       accessTierId: true,
-      accessTier: { select: { id: true, title: true } },
+      accessTier: { select: { id: true, title: true, priceCents: true } },
       author: { select: { id: true, username: true, avatarUrl: true } },
       _count: { select: { likes: true, comments: true } },
     },
@@ -71,9 +73,21 @@ export const fetchPostsByUsername = async ({
     authUserId && String(authUserId) !== String(user.id)
       ? await prisma.subscription.findFirst({
           where: { subscriberId: authUserId, authorId: user.id },
-          select: { tierId: true },
+          select: {
+            tierId: true,
+            status: true,
+            expiresAt: true,
+            tier: { select: { priceCents: true } },
+          },
         })
       : null;
+
+  const isSubActive =
+    subscription &&
+    subscription.status === "active" &&
+    (!subscription.expiresAt || new Date() < subscription.expiresAt);
+
+  const subTierPrice = isSubActive ? (subscription?.tier?.priceCents ?? 0) : 0;
 
   const hasMore = posts.length > take;
   const itemsRaw = hasMore ? posts.slice(0, take) : posts;
@@ -83,13 +97,13 @@ export const fetchPostsByUsername = async ({
     let locked = false;
 
     if (p.isPaid && !isAuthor) {
-      if (!subscription) {
+      if (!isSubActive) {
         locked = true;
-      } else if (
-        subscription.tierId &&
-        subscription.tierId !== p.accessTierId
-      ) {
-        locked = true;
+      } else {
+        const postTierPrice = (p.accessTier as any)?.priceCents ?? 0;
+        if (subTierPrice < postTierPrice) {
+          locked = true;
+        }
       }
     }
 
@@ -166,6 +180,30 @@ export const createPostForUser = async ({
       _count: { select: { likes: true, comments: true } },
     },
   });
+
+  try {
+    const activeSubs = await prisma.subscription.findMany({
+      where: {
+        authorId: targetUser.id,
+        status: "active",
+      },
+      select: { subscriberId: true },
+    });
+
+    if (activeSubs.length > 0) {
+      await prisma.notification.createMany({
+        data: activeSubs.map((sub) => ({
+          userId: sub.subscriberId,
+          type: "new_post",
+          postId: post.id,
+          authorName: username,
+          message: `${username} published a new post: "${post.title}"`,
+        })),
+      });
+    }
+  } catch (e) {
+    console.error("Failed to create notifications", e);
+  }
 
   return post;
 };
@@ -282,4 +320,161 @@ export const addCommentToPost = async ({
   });
 
   return { comment, commentsCount };
+};
+
+export const updatePostById = async ({
+  postId,
+  authUserId,
+  title,
+  description,
+  isPaid,
+  accessTierId,
+  fileBuffer,
+  removeImage,
+}: UpdatePostParams) => {
+  const post = await prisma.post.findUnique({
+    where: { id: postId },
+    select: {
+      id: true,
+      authorId: true,
+      imageUrl: true,
+      author: { select: { username: true } },
+    },
+  });
+
+  if (!post) throw new NotFoundError("Post not found");
+  if (post.authorId !== authUserId) {
+    throw new ForbiddenError("You are not allowed to edit this post");
+  }
+
+  if (isPaid && accessTierId) {
+    const tier = await prisma.subscriptionTier.findUnique({
+      where: { id: accessTierId },
+      select: { authorId: true },
+    });
+    if (!tier || tier.authorId !== post.authorId) {
+      throw new BadRequestError("Invalid access tier");
+    }
+  }
+
+  let imageUrl = post.imageUrl;
+  if (removeImage && imageUrl) {
+    try {
+      await deleteFile(imageUrl);
+    } catch (_) {}
+    imageUrl = null;
+  }
+  if (fileBuffer) {
+    if (imageUrl) {
+      try {
+        await deleteFile(imageUrl);
+      } catch (_) {}
+    }
+    imageUrl = await savePost(fileBuffer);
+  }
+
+  const updated = await prisma.post.update({
+    where: { id: postId },
+    data: {
+      ...(title != null ? { title: title.trim() } : {}),
+      ...(description != null ? { description: description.trim() } : {}),
+      ...(isPaid !== undefined ? { isPaid } : {}),
+      accessTierId: isPaid ? (accessTierId ?? null) : null,
+      imageUrl,
+    },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      imageUrl: true,
+      createdAt: true,
+      isPaid: true,
+      accessTierId: true,
+      accessTier: { select: { id: true, title: true } },
+      author: { select: { id: true, username: true, avatarUrl: true } },
+      _count: { select: { likes: true, comments: true } },
+    },
+  });
+
+  return updated;
+};
+
+export const fetchFeed = async ({
+  authUserId,
+  take,
+  cursor,
+}: FetchFeedParams): Promise<PaginatedResponse<PostDto>> => {
+  const subs = await prisma.subscription.findMany({
+    where: {
+      subscriberId: authUserId,
+      status: { in: ["active", "cancelled"] },
+    },
+    select: {
+      authorId: true,
+      tierId: true,
+      status: true,
+      expiresAt: true,
+      tier: { select: { priceCents: true } },
+    },
+  });
+
+  const now = new Date();
+  const activeSubs = subs.filter(
+    (s) => s.status === "active" || (s.expiresAt && now < s.expiresAt),
+  );
+
+  if (activeSubs.length === 0) {
+    return { items: [], nextCursor: null };
+  }
+
+  const authorIds = activeSubs.map((s) => s.authorId);
+
+  const posts = await prisma.post.findMany({
+    where: { authorId: { in: authorIds } },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: take + 1,
+    ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      imageUrl: true,
+      createdAt: true,
+      isPaid: true,
+      accessTierId: true,
+      accessTier: { select: { id: true, title: true, priceCents: true } },
+      author: { select: { id: true, username: true, avatarUrl: true } },
+      _count: { select: { likes: true, comments: true } },
+    },
+  });
+
+  const postIds = posts.map((p) => p.id);
+
+  const likedRows =
+    postIds.length > 0
+      ? await prisma.postLike.findMany({
+          where: { postId: { in: postIds }, userId: authUserId },
+          select: { postId: true },
+        })
+      : [];
+  const likedSet = new Set(likedRows.map((r) => r.postId));
+
+  const subByAuthor = new Map(
+    activeSubs.map((s) => [s.authorId, s.tier?.priceCents ?? 0]),
+  );
+
+  const hasMore = posts.length > take;
+  const itemsRaw = hasMore ? posts.slice(0, take) : posts;
+
+  const items = itemsRaw.map((p) => {
+    let locked = false;
+    if (p.isPaid) {
+      const subPrice = subByAuthor.get(p.author.id) ?? 0;
+      const postPrice = (p.accessTier as any)?.priceCents ?? 0;
+      if (subPrice < postPrice) locked = true;
+    }
+    return { ...p, liked: likedSet.has(p.id), locked } as PostDto;
+  });
+
+  return { items, nextCursor: hasMore ? items[items.length - 1].id : null };
 };

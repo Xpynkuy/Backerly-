@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/authMIddleware";
 import { uploadMemory } from "../config/uploadMemory";
-import { createPostByUsername, getPostsByUsername } from "../controllers/postController";
+import { createPostByUsername, getPostsByUsername, getFeed } from "../controllers/postController";
 import { optionalAuthenticate } from "../middleware/optionalAuthenticate";
 
 const router = Router();

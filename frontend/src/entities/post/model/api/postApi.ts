@@ -58,19 +58,26 @@ export const postApi = baseApi.injectEndpoints({
       }),
 
       async onQueryStarted({ postId, username }, { dispatch, queryFulfilled }) {
-        // 1️⃣ Optimistic update — СРАЗУ
-        const patchResult = dispatch(
+        const patchProfile = dispatch(
           postApi.util.updateQueryData(
             "getProfilePosts",
             { username },
             (draft) => {
               const post = draft.items.find((p) => p.id === postId);
               if (!post) return;
-
               post.liked = !post.liked;
               post._count.likes += post.liked ? 1 : -1;
             },
           ),
+        );
+
+        const patchFeed = dispatch(
+          postApi.util.updateQueryData("getFeed", {}, (draft) => {
+            const post = draft.items.find((p) => p.id === postId);
+            if (!post) return;
+            post.liked = !post.liked;
+            post._count.likes += post.liked ? 1 : -1;
+          }),
         );
 
         try {
@@ -88,8 +95,18 @@ export const postApi = baseApi.injectEndpoints({
               },
             ),
           );
+
+          dispatch(
+            postApi.util.updateQueryData("getFeed", {}, (draft) => {
+              const post = draft.items.find((p) => p.id === postId);
+              if (!post) return;
+              post.liked = data.liked;
+              post._count.likes = data.likesCount;
+            }),
+          );
         } catch {
-          patchResult.undo();
+          patchProfile.undo();
+          patchFeed.undo();
         }
       },
     }),
@@ -171,8 +188,54 @@ export const postApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (_r, _e, { username }) => [
         { type: "Posts" as const, id: username },
+        "NotificationCount" as any,
+        "Notifications" as any,
       ],
     }),
+
+    updatePost: builder.mutation<
+      any,
+      { postId: string; username: string; form: FormData }
+    >({
+      query: ({ postId, form }) => ({
+        url: `/posts/${postId}`,
+        method: "PUT",
+        body: form,
+      }),
+      invalidatesTags: (_r, _e, { username }) => [
+        { type: "Posts" as const, id: username },
+      ],
+    }),
+
+    getFeed: builder.query<PostPage, { take?: number; cursor?: string | null }>(
+      {
+        query: ({ take = 10, cursor }) => ({
+          url: `feed`,
+          method: "GET",
+          params: { take, cursor: cursor ?? undefined },
+        }),
+
+        serializeQueryArgs: ({ endpointName }) => endpointName,
+
+        merge: (currentCache, newData, meta) => {
+          const cursor = meta.arg?.cursor ?? null;
+          if (!cursor) {
+            currentCache.items = newData.items;
+            currentCache.nextCursor = newData.nextCursor;
+            return;
+          }
+          const existingIds = new Set(currentCache.items.map((p) => p.id));
+          for (const p of newData.items) {
+            if (!existingIds.has(p.id)) currentCache.items.push(p);
+          }
+          currentCache.nextCursor = newData.nextCursor;
+        },
+
+        forceRefetch: ({ currentArg, previousArg }) => {
+          return currentArg?.cursor !== previousArg?.cursor;
+        },
+      },
+    ),
   }),
   overrideExisting: false,
 });
@@ -182,6 +245,8 @@ export const {
   useGetProfilePostsQuery,
   useToggleLikeMutation,
   useDeletePostMutation,
+  useUpdatePostMutation,
+  useLazyGetFeedQuery,
   useGetCommentsQuery,
   useAddCommentMutation,
   useCreatePostMutation,

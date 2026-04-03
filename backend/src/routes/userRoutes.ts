@@ -33,7 +33,7 @@ router.delete("/:username/tiers/:tierId", authenticate, deleteTier);
 
 router.post("/:username/subscribe", authenticate, subscribeToAuthor);
 router.post("/:username/unsubscribe", authenticate, unsubscribeFromAuthor);
-router.get("/:username/subscription-status", authenticate, getSubscriptionStatus);
+router.get("/:username/subscription-status", optionalAuthenticate, getSubscriptionStatus);
 
 router.patch("/:username/description", authenticate, updateDescriptionByUsername);
 

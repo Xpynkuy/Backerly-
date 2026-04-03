@@ -19,6 +19,7 @@ export const authApi = baseApi.injectEndpoints({
         method: "POST",
         body: credentials,
       }),
+      invalidatesTags: ["AuthMe"],
 
       async onQueryStarted(_, { dispatch, queryFulfilled }) {
         try {
@@ -45,7 +46,8 @@ export const authApi = baseApi.injectEndpoints({
         try {
           await queryFulfilled;
           dispatch(logout());
-        } catch (error) {
+        } finally {
+          dispatch(baseApi.util.resetApiState());
           dispatch(logout());
         }
       },

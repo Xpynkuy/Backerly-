@@ -3,7 +3,7 @@
     "target": "ES2020",
     "types": ["node"],
     "module": "CommonJS",
-    "moduleResolution": "node", // Измените с "bundler" на "node"
+    "moduleResolution": "node", 
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "strict": true,

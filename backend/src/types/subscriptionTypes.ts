@@ -5,9 +5,11 @@ export interface TierDto {
   description?: string | null;
   imageUrl?: string | null;
   priceCents?: number | null;
+  sortOrder: number;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  subscriberCount?: number;
 }
 
 export interface SubscribedAuthorDto {
@@ -18,6 +20,11 @@ export interface SubscribedAuthorDto {
   description?: string | null;
   tierId?: string | null;
   tierTitle?: string | null;
+  tierPriceCents?: number | null;
+  status: string;
+  startDate: string;
+  expiresAt?: string | null;
+  cancelledAt?: string | null;
 }
 
 export interface FetchTiersByUsernameParams {
@@ -30,6 +37,7 @@ export interface CreateTierParams {
   title: string;
   description?: string | null;
   priceCents?: number | null;
+  sortOrder?: number | null;
   fileBuffer?: Buffer | null;
 }
 
@@ -40,6 +48,7 @@ export interface UpdateTierParams {
   title?: string | null;
   description?: string | null;
   priceCents?: number | null;
+  sortOrder?: number | null;
   fileBuffer?: Buffer | null;
 }
 
@@ -82,8 +91,14 @@ export interface SubscriptionsResponse {
 export interface SubscriptionStatusResponse {
   subscribed: boolean;
   tierId: string | null;
+  tierTitle: string | null;
+  tierPriceCents: number | null;
+  status: string | null;
+  expiresAt: string | null;
 }
 
 export interface SubscribeResponse {
   subscribed: boolean;
+  status: string;
+  expiresAt: string | null;
 }

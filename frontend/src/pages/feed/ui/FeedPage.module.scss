@@ -1,0 +1,45 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 700px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.title {
+  font: var(--font-xl);
+}
+
+.empty {
+  display: flex;
+  margin: 40px auto;
+  color: var(--text-color-gray);
+  font: var(--font-s);
+}
+
+.feedItem {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.authorLink {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  transition: opacity 0.2s;
+
+  &:hover {
+    opacity: 0.7;
+  }
+}
+
+.authorName {
+  font: var(--font-s);
+  font-weight: 600;
+  color: var(--text-color-black);
+}
