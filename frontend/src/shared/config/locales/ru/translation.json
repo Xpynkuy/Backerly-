@@ -84,12 +84,13 @@
     "Choose access tier": "Выберите уровень доступа",
     "Create post": "Создать пост",
     "Publish": "Опубликовать",
+    "Publishing...": "Публикация...",
     "Title is required": "Название обязательно",
     "Description is required": "Описание обязательно",
     "Title must be at least 3 characters": "Название должно быть больше 3 символов",
     "Title must be less than 60 characters": "Название не может быть больше 60 символов",
     "Description must be at least 4 characters": "Описание должно быть больше 4 символов",
-    
+
     "Create subscription tier": "Создать уровень подписки",
     "Enter tier title": "Введите название уровня",
     "Enter tier description": "Введите описание уровня",
@@ -126,7 +127,7 @@
     "Username must be at most 20 characters": "Имя не может быть больше 20 символов",
     "Password is required": "Пароль не может быть пустым",
     "Password must be at least 6 characters": "Пароль должно быть больше 3 символов",
-    "Password must be at most 20 characters":"Пароль не может быть больше 20 символов",
+    "Password must be at most 20 characters": "Пароль не может быть больше 20 символов",
 
     "tier.subscribers": "подписчиков",
     "tier.yourTier": "Ваш текущий уровень",
@@ -175,6 +176,27 @@
     "editPost.hasImage": "Текущее изображение прикреплено",
     "editPost.removeImage": "Удалить",
 
+    "follow.follow": "Отслеживать",
+    "follow.unfollow": "Перестать отслеживать",
+    "follow.following": "Вы отслеживаете",
+
     "Feed": "Лента",
-    "feed.empty": "Ваша лента пуста.\nПодпишитесь на авторов, чтобы видеть их посты здесь."
+    "feed.empty": "Ваша лента пуста.\nПодпишитесь на авторов, чтобы видеть их посты здесь.",
+
+    "tags.label": "Теги",
+    "tags.placeholder": "Введите тег и нажмите Enter",
+    "tags.all": "Все",
+
+    "Dashboard": "Дашборд",
+    "dashboard.title": "Дашборд автора",
+    "dashboard.posts": "Посты",
+    "dashboard.likes": "Лайки",
+    "dashboard.comments": "Комментарии",
+    "dashboard.subscribers": "Подписчики",
+    "dashboard.paidSubs": "Платные",
+    "dashboard.freeSubs": "Бесплатные",
+    "dashboard.postsChart": "Посты по месяцам",
+    "dashboard.subsChart": "Новые подписчики по месяцам",
+    "dashboard.topPosts": "Топ постов",
+    "dashboard.popularTags": "Популярные теги"
 }

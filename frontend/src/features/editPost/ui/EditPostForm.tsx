@@ -4,6 +4,7 @@ import MyInput from "@shared/ui/input/MyInput";
 import TextArea from "@shared/ui/textArea/TextArea";
 import MyButton from "@shared/ui/button/MyButton";
 import styles from "./EditPostForm.module.scss";
+import { TagInput } from "@features/postTags";
 import { useGetTiersQuery } from "@features/subscriptionTiers/model/api/subscriptionApi";
 import { useUpdatePostMutation } from "@entities/post/model/api/postApi";
 import { useTranslation } from "react-i18next";
@@ -52,6 +53,7 @@ export const EditPostForm: React.FC<EditPostFormProps> = ({
     post.accessTier?.id ?? null,
   );
   const [removeImage, setRemoveImage] = useState(false);
+  const [tags, setTags] = useState<string[]>(post.tags ?? []);
 
   const tiers = tiersData?.items ?? [];
 
@@ -66,6 +68,7 @@ export const EditPostForm: React.FC<EditPostFormProps> = ({
       form.append("removeImage", "1");
     }
 
+    form.append("tags", JSON.stringify(tags));
     form.append("isPaid", isPaid ? "1" : "0");
     if (isPaid && accessTierId) {
       form.append("accessTierId", accessTierId);
@@ -133,6 +136,9 @@ export const EditPostForm: React.FC<EditPostFormProps> = ({
       )}
       <input type="file" accept="image/*" {...register("image")} />
 
+      <span className={styles.formFieldsTitle}>{t("tags.label")}</span>
+      <TagInput tags={tags} onChange={setTags} />
+
       <div className={styles.radioContainer}>
         <span className={styles.formFieldsTitle}>
           {t("Enter subscription levels")}
@@ -178,7 +184,12 @@ export const EditPostForm: React.FC<EditPostFormProps> = ({
         <MyButton type="submit" disabled={isLoading}>
           {isLoading ? "..." : t("Save")}
         </MyButton>
-        <MyButton type="button" color="GRAY" onClick={onCancel} disabled={isLoading}>
+        <MyButton
+          type="button"
+          color="GRAY"
+          onClick={onCancel}
+          disabled={isLoading}
+        >
           {t("Cancel")}
         </MyButton>
       </div>

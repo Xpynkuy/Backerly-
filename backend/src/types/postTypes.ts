@@ -3,6 +3,7 @@ export interface PostDto {
   title: string;
   description: string;
   imageUrl: string | null;
+  tag?: string;
   createdAt: Date;
   isPaid: boolean;
   accessTierId: string | null;
@@ -40,6 +41,7 @@ export interface CreatePostParams {
   description: string;
   isPaid: boolean;
   accessTierId?: string | null;
+  tags?: string[];
   fileBuffer?: Buffer | null;
 }
 
@@ -48,6 +50,7 @@ export interface FetchPostsParams {
   take: number;
   cursor?: string;
   authUserId?: string | null;
+  tag?: string;
 }
 
 export interface DeletePostParams {
@@ -97,6 +100,7 @@ export interface UpdatePostParams {
   isPaid?: boolean;
   accessTierId?: string | null;
   fileBuffer?: Buffer | null;
+  tags?: string[];
   removeImage?: boolean;
 }
 
@@ -104,4 +108,5 @@ export interface FetchFeedParams {
   authUserId: string;
   take: number;
   cursor?: string;
+  tag?: string;
 }

@@ -10,10 +10,10 @@ import { NotFoundPage } from "@pages/notFoundPage";
 import { SearchPage } from "@pages/search";
 import { SubscriptionsPage } from "@pages/subscriptions";
 import { FeedPage } from "@pages/feed";
+import { DashboardPage } from "@pages/dashboard/ui";
 
 const AppRoute = () => {
   return (
-    //MAIN LAYOUT
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<MainPage />}></Route>
@@ -49,9 +49,16 @@ const AppRoute = () => {
             </ProtectedRoute>
           }
         ></Route>
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <DashboardPage />
+            </ProtectedRoute>
+          }
+        ></Route>
       </Route>
       <Route path="*" element={<NotFoundPage />}></Route>
-      //AUTH LAYOUT
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<LoginPage />}></Route>
         <Route path="/register" element={<RegisterPage />}></Route>

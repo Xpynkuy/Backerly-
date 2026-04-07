@@ -90,6 +90,7 @@ export interface SubscriptionsResponse {
 
 export interface SubscriptionStatusResponse {
   subscribed: boolean;
+  followed: boolean;
   tierId: string | null;
   tierTitle: string | null;
   tierPriceCents: number | null;

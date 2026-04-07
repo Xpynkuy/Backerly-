@@ -8,6 +8,7 @@ import userRoutes from "./routes/userRoutes";
 import postRoutes from "./routes/postRoutes";
 import postActionRoutes from "./routes/postActionRoutes";
 import notificationRoutes from "./routes/notificationRoutes";
+import statsRoutes from "./routes/statsRoutes";
 import path from "path";
 import { authenticate } from "./middleware/authMIddleware";
 import { getFeed } from "./controllers/postController";
@@ -45,10 +46,11 @@ app.get("/health", (req, res) => {
 
 app.use("/api/auth", router);
 app.use("/api/users", userRoutes);
-app.use("/api/feed", authenticate, getFeed);
 app.use("/api/users", postRoutes);
+app.use("/api/feed", authenticate, getFeed);
 app.use("/api/posts", postActionRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/stats", statsRoutes);
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use("*", (req, res) => {

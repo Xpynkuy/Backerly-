@@ -20,6 +20,20 @@
     font: var(--font-extraSmall);
   }
 
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .tag {
+    font: var(--font-extraSmall);
+    color: var(--primary-color);
+    background: var(--bg-color-gray);
+    padding: 2px 8px;
+    border-radius: var(--border-radius);
+  }
+
   .postHeader {
     display: flex;
     flex-direction: column;
@@ -42,7 +56,7 @@
     overflow-wrap: anywhere;
     min-width: 0;
   }
-  
+
   .mediaWrapper {
     position: relative;
   }

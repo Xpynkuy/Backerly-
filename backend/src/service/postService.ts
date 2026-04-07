@@ -23,11 +23,26 @@ import {
   BadRequestError,
 } from "../errors/ServiceError";
 
+const postSelect = {
+  id: true,
+  title: true,
+  description: true,
+  imageUrl: true,
+  tags: true,
+  createdAt: true,
+  isPaid: true,
+  accessTierId: true,
+  accessTier: { select: { id: true, title: true, priceCents: true } },
+  author: { select: { id: true, username: true, avatarUrl: true } },
+  _count: { select: { likes: true, comments: true } },
+};
+
 export const fetchPostsByUsername = async ({
   username,
   take,
   cursor,
   authUserId,
+  tag,
 }: FetchPostsParams): Promise<PaginatedResponse<PostDto>> => {
   const user = await prisma.user.findUnique({
     where: { username },
@@ -39,22 +54,14 @@ export const fetchPostsByUsername = async ({
   }
 
   const posts = await prisma.post.findMany({
-    where: { authorId: user.id },
+    where: {
+      authorId: user.id,
+      ...(tag ? { tags: { has: tag } } : {}),
+    },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take: take + 1,
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
-    select: {
-      id: true,
-      title: true,
-      description: true,
-      imageUrl: true,
-      createdAt: true,
-      isPaid: true,
-      accessTierId: true,
-      accessTier: { select: { id: true, title: true, priceCents: true } },
-      author: { select: { id: true, username: true, avatarUrl: true } },
-      _count: { select: { likes: true, comments: true } },
-    },
+    select: postSelect,
   });
 
   const postIds = posts.map((p) => p.id);
@@ -82,12 +89,14 @@ export const fetchPostsByUsername = async ({
         })
       : null;
 
-  const isSubActive =
+ const isSubActive =
     subscription &&
-    subscription.status === "active" &&
+    (subscription.status === "active" || subscription.status === "cancelled") &&
     (!subscription.expiresAt || new Date() < subscription.expiresAt);
 
-  const subTierPrice = isSubActive ? (subscription?.tier?.priceCents ?? 0) : 0;
+  const subTierPrice = isSubActive
+    ? subscription?.tier?.priceCents ?? 0
+    : 0;
 
   const hasMore = posts.length > take;
   const itemsRaw = hasMore ? posts.slice(0, take) : posts;
@@ -126,6 +135,7 @@ export const createPostForUser = async ({
   description,
   isPaid,
   accessTierId,
+  tags,
   fileBuffer,
 }: CreatePostParams) => {
   const targetUser = await prisma.user.findUnique({
@@ -164,21 +174,11 @@ export const createPostForUser = async ({
       title: title.trim(),
       description: description.trim(),
       imageUrl: imageUrl ?? undefined,
+      tags: tags ?? [],
       isPaid,
       accessTierId: isPaid ? accessTierId : undefined,
     },
-    select: {
-      id: true,
-      title: true,
-      description: true,
-      imageUrl: true,
-      createdAt: true,
-      isPaid: true,
-      accessTierId: true,
-      accessTier: { select: { id: true, title: true } },
-      author: { select: { id: true, username: true, avatarUrl: true } },
-      _count: { select: { likes: true, comments: true } },
-    },
+    select: postSelect,
   });
 
   try {
@@ -329,6 +329,7 @@ export const updatePostById = async ({
   description,
   isPaid,
   accessTierId,
+  tags,
   fileBuffer,
   removeImage,
 }: UpdatePostParams) => {
@@ -359,16 +360,12 @@ export const updatePostById = async ({
 
   let imageUrl = post.imageUrl;
   if (removeImage && imageUrl) {
-    try {
-      await deleteFile(imageUrl);
-    } catch (_) {}
+    try { await deleteFile(imageUrl); } catch (_) {}
     imageUrl = null;
   }
   if (fileBuffer) {
     if (imageUrl) {
-      try {
-        await deleteFile(imageUrl);
-      } catch (_) {}
+      try { await deleteFile(imageUrl); } catch (_) {}
     }
     imageUrl = await savePost(fileBuffer);
   }
@@ -379,21 +376,11 @@ export const updatePostById = async ({
       ...(title != null ? { title: title.trim() } : {}),
       ...(description != null ? { description: description.trim() } : {}),
       ...(isPaid !== undefined ? { isPaid } : {}),
+      ...(tags !== undefined ? { tags } : {}),
       accessTierId: isPaid ? (accessTierId ?? null) : null,
       imageUrl,
     },
-    select: {
-      id: true,
-      title: true,
-      description: true,
-      imageUrl: true,
-      createdAt: true,
-      isPaid: true,
-      accessTierId: true,
-      accessTier: { select: { id: true, title: true } },
-      author: { select: { id: true, username: true, avatarUrl: true } },
-      _count: { select: { likes: true, comments: true } },
-    },
+    select: postSelect,
   });
 
   return updated;
@@ -403,6 +390,7 @@ export const fetchFeed = async ({
   authUserId,
   take,
   cursor,
+  tag,
 }: FetchFeedParams): Promise<PaginatedResponse<PostDto>> => {
   const subs = await prisma.subscription.findMany({
     where: {
@@ -419,8 +407,10 @@ export const fetchFeed = async ({
   });
 
   const now = new Date();
-  const activeSubs = subs.filter(
-    (s) => s.status === "active" || (s.expiresAt && now < s.expiresAt),
+    const activeSubs = subs.filter(
+    (s) =>
+      s.status === "active" ||
+      (s.status === "cancelled" && s.expiresAt && now < s.expiresAt),
   );
 
   if (activeSubs.length === 0) {
@@ -430,22 +420,14 @@ export const fetchFeed = async ({
   const authorIds = activeSubs.map((s) => s.authorId);
 
   const posts = await prisma.post.findMany({
-    where: { authorId: { in: authorIds } },
+    where: {
+      authorId: { in: authorIds },
+      ...(tag ? { tags: { has: tag } } : {}),
+    },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take: take + 1,
     ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
-    select: {
-      id: true,
-      title: true,
-      description: true,
-      imageUrl: true,
-      createdAt: true,
-      isPaid: true,
-      accessTierId: true,
-      accessTier: { select: { id: true, title: true, priceCents: true } },
-      author: { select: { id: true, username: true, avatarUrl: true } },
-      _count: { select: { likes: true, comments: true } },
-    },
+    select: postSelect,
   });
 
   const postIds = posts.map((p) => p.id);

@@ -51,7 +51,14 @@ export const getUserByUsername = async (
     },
   });
 
-  return { ...user, paidSubscriberCount, totalSubscriberCount };
+  const followerCount = await prisma.subscription.count({
+    where: {
+      authorId: user.id,
+      status: "active",
+    },
+  });
+
+  return { ...user, paidSubscriberCount, totalSubscriberCount: followerCount };
 };
 
 export const updateUserDescription = async ({

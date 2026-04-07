@@ -12,6 +12,7 @@ import {
 import type { SubscriptionTier } from "@features/subscriptionTiers/model/types/types";
 import styles from "./SubscriptionWidget.module.scss";
 import { EditTierModal } from "@features/subscriptionTiers";
+import { FollowButton } from "@features/subscriptionTiers/ui/followButton/FollowButton";
 
 interface SubscriptionTiersWidgetProps {
   username: string;
@@ -20,12 +21,9 @@ interface SubscriptionTiersWidgetProps {
 
 export const SubscriptionTiersWidget = memo(
   ({ username, isMyProfile }: SubscriptionTiersWidgetProps) => {
-    const {
-      data,
-      isFetching,
-      isError,
-      refetch,
-    } = useGetTiersQuery({ username });
+    const { data, isFetching, isError, refetch } = useGetTiersQuery({
+      username,
+    });
     const tiers = data?.items ?? [];
 
     const { data: subStatus } = useGetSubscriptionStatusQuery(
@@ -104,6 +102,7 @@ export const SubscriptionTiersWidget = memo(
         {tiers.length === 0 && !isFetching && (
           <div>{renderWithLineBreaks(t("subscription.noTiers"))}</div>
         )}
+        {!isMyProfile && <FollowButton username={username} />}
       </div>
     );
   },

@@ -1,4 +1,3 @@
-// src/entities/post/ui/postCard/PostCard.tsx
 import type { ReactNode } from "react";
 import type { Post } from "../../model/types/postTypes";
 import styles from "./PostCard.module.scss";
@@ -25,6 +24,15 @@ export const PostCardShell = ({
         <span className={styles.paidBadge}>
           <LockKeyhole size={14} /> {post.accessTier.title}
         </span>
+      )}
+      {post.tags && post.tags.length > 0 && (
+        <div className={styles.tags}>
+          {post.tags.map((tag) => (
+            <span key={tag} className={styles.tag}>
+              #{tag}
+            </span>
+          ))}
+        </div>
       )}
       <div className={styles.mediaWrapper}>
         {post.imageUrl && (

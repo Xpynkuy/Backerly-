@@ -1,5 +1,9 @@
 import { baseApi } from "@shared/api/baseApi";
-import type { SubscriptionTier, SubscriptionStatus, SubscriptionUser } from "../types/types";
+import type {
+  SubscriptionTier,
+  SubscriptionStatus,
+  SubscriptionUser,
+} from "../types/types";
 
 export const subscriptionApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -78,8 +82,45 @@ export const subscriptionApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (_r, _e, { username }) => [
         { type: "SubscriptionStatus" as const, id: username },
-        { type: "Subscriptions" as const, id: username },
+        "Subscriptions" as any,
         { type: "Posts" as const, id: username },
+        { type: "Tiers" as const, id: username },
+        { type: "User" as const, id: username },
+      ],
+    }),
+
+    follow: builder.mutation<
+      { subscribed: boolean; status: string; expiresAt: string | null },
+      { username: string }
+    >({
+      query: ({ username }) => ({
+        url: `/users/${username}/subscribe`,
+        method: "POST",
+        body: { tierId: null },
+      }),
+      invalidatesTags: (_r, _e, { username }) => [
+        { type: "SubscriptionStatus" as const, id: username },
+        "Subscriptions" as any,
+        { type: "Posts" as const, id: username },
+        { type: "Tiers" as const, id: username },
+        { type: "User" as const, id: username },
+      ],
+    }),
+
+    unfollow: builder.mutation<
+      { subscribed: boolean; status: string; expiresAt: string | null },
+      { username: string }
+    >({
+      query: ({ username }) => ({
+        url: `/users/${username}/unsubscribe`,
+        method: "POST",
+      }),
+      invalidatesTags: (_r, _e, { username }) => [
+        { type: "SubscriptionStatus" as const, id: username },
+        "Subscriptions" as any,
+        { type: "Posts" as const, id: username },
+        { type: "Tiers" as const, id: username },
+        { type: "User" as const, id: username },
       ],
     }),
 
@@ -93,8 +134,10 @@ export const subscriptionApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (_r, _e, { username }) => [
         { type: "SubscriptionStatus" as const, id: username },
-        { type: "Subscriptions" as const, id: username },
+        "Subscriptions" as any,
         { type: "Posts" as const, id: username },
+        { type: "Tiers" as const, id: username },
+        { type: "User" as const, id: username },
       ],
     }),
 
@@ -121,6 +164,8 @@ export const {
   useUpdateTierMutation,
   useDeleteTierMutation,
   useGetSubscriptionsQuery,
+  useFollowMutation,
+  useUnfollowMutation,
   useSubscribeMutation,
   useUnsubscribeMutation,
   useGetSubscriptionStatusQuery,

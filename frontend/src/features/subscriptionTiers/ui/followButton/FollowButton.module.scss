@@ -1,0 +1,11 @@
+.followedBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  font: var(--font-s);
+  color: var(--text-color-gray);
+  border: 1px solid var(--gray-color);
+  border-radius: var(--border-radius);
+}

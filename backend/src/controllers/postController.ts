@@ -22,6 +22,7 @@ export const getPostsByUsername = async (
     const { username } = req.params;
     const take = parsePositiveInt(req.query.take, 5, 1, 30);
     const cursor = (req.query.cursor as string | undefined) ?? undefined;
+    const tag = (req.query.tag as string | undefined) ?? undefined;
     const authUserId = getAuthUserId(req);
 
     const result = await fetchPostsByUsername({
@@ -29,6 +30,7 @@ export const getPostsByUsername = async (
       take,
       cursor,
       authUserId: authUserId ?? undefined,
+      tag,
     });
 
     return res.json(result);
@@ -53,6 +55,11 @@ export const createPostByUsername = async (
     const { title, description } = req.body;
     const isPaid = parseBoolean(req.body.isPaid);
     const accessTierId = (req.body.accessTierId as string | undefined) ?? null;
+    const tags = req.body.tags
+      ? typeof req.body.tags === "string"
+        ? JSON.parse(req.body.tags)
+        : req.body.tags
+      : [];
     const fileBuffer = req.file?.buffer;
 
     const post = await createPostForUser({
@@ -62,6 +69,7 @@ export const createPostByUsername = async (
       description: description.trim(),
       isPaid,
       accessTierId,
+      tags,
       fileBuffer,
     });
 
@@ -168,8 +176,15 @@ export const updatePost = async (
 
     const postId = req.params.id;
     const { title, description } = req.body;
-    const isPaid = req.body.isPaid !== undefined ? parseBoolean(req.body.isPaid) : undefined;
+    const isPaid =
+      req.body.isPaid !== undefined ? parseBoolean(req.body.isPaid) : undefined;
     const accessTierId = (req.body.accessTierId as string | undefined) ?? null;
+    const tags =
+      req.body.tags !== undefined
+        ? typeof req.body.tags === "string"
+          ? JSON.parse(req.body.tags)
+          : req.body.tags
+        : undefined;
     const removeImage = parseBoolean(req.body.removeImage);
     const fileBuffer = req.file?.buffer;
 
@@ -180,6 +195,7 @@ export const updatePost = async (
       description,
       isPaid,
       accessTierId,
+      tags,
       fileBuffer,
       removeImage,
     });
@@ -201,8 +217,9 @@ export const getFeed = async (
 
     const take = parsePositiveInt(req.query.take, 10, 1, 30);
     const cursor = (req.query.cursor as string | undefined) ?? undefined;
+    const tag = (req.query.tag as string | undefined) ?? undefined;
 
-    const result = await fetchFeed({ authUserId, take, cursor });
+    const result = await fetchFeed({ authUserId, take, cursor, tag });
     return res.json(result);
   } catch (error) {
     next(error);

@@ -9,6 +9,7 @@ import { getDateLocale } from "@shared/lib/I18n/getDateLocale";
 import { renderWithLineBreaks } from "@shared/lib/utils/renderWithLineBreaks";
 import { CreatePostModal } from "@features/createPost";
 import { EditPostModal } from "@features/editPost";
+import { TagFilter } from "@features/postTags";
 import MyButton from "@shared/ui/button/MyButton";
 import Loader from "@shared/ui/loader/Loader";
 import { PostDeleteButton } from "@features/postDelete";
@@ -25,6 +26,7 @@ export const PostsWidget = memo((props: PostWidgetProps) => {
   const { username, isMyProfile } = props;
   const [isCreateModalOpen, setCreateModalOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
+  const [activeTag, setActiveTag] = useState<string | null>(null);
   const { t, i18n } = useTranslation();
   const PAGE_SIZE = 5;
   const [trigger, { data, isFetching, isError }] =
@@ -32,23 +34,32 @@ export const PostsWidget = memo((props: PostWidgetProps) => {
 
   useEffect(() => {
     if (!username) return;
-    trigger({ username, take: PAGE_SIZE, cursor: null });
-  }, [username, trigger]);
+    trigger({ username, take: PAGE_SIZE, cursor: null, tag: activeTag });
+  }, [username, trigger, activeTag]);
 
   const loadMore = () => {
     const nextCursor = data?.nextCursor;
     if (!nextCursor) return;
-    trigger({ username, take: PAGE_SIZE, cursor: nextCursor });
+    trigger({
+      username,
+      take: PAGE_SIZE,
+      cursor: nextCursor,
+      tag: activeTag,
+    });
   };
 
   const reloadFirstPage = () => {
-    trigger({ username, take: PAGE_SIZE, cursor: null });
+    trigger({ username, take: PAGE_SIZE, cursor: null, tag: activeTag });
   };
 
   if (isError) return <div>Failed to load posts</div>;
   const posts = data?.items ?? [];
   const hasMore = !!data?.nextCursor;
   const locale = getDateLocale(i18n.language);
+
+  const allTags = Array.from(
+    new Set<string>(posts.flatMap((p: Post) => p.tags ?? [])),
+  );
 
   return (
     <div className={styles.container}>
@@ -88,6 +99,8 @@ export const PostsWidget = memo((props: PostWidgetProps) => {
       )}
 
       <h3>{renderWithLineBreaks(t("postWidget.recentPost"))}</h3>
+
+      <TagFilter tags={allTags} activeTag={activeTag} onSelect={setActiveTag} />
 
       <PostList
         posts={posts}

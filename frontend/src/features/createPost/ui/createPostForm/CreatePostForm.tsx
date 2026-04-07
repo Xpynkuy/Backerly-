@@ -4,7 +4,7 @@ import MyInput from "@shared/ui/input/MyInput";
 import TextArea from "@shared/ui/textArea/TextArea";
 import MyButton from "@shared/ui/button/MyButton";
 import styles from "./CreatePostForm.module.scss";
-
+import { TagInput } from "@features/postTags";
 import { useGetTiersQuery } from "@features/subscriptionTiers/model/api/subscriptionApi";
 import { useCreatePostMutation } from "@entities/post/model/api/postApi";
 import { useTranslation } from "react-i18next";
@@ -42,6 +42,7 @@ export const CreatePostForm: React.FC<{
 
   const [isPaid, setIsPaid] = useState(false);
   const [accessTierId, setAccessTierId] = useState<string | null>(null);
+  const [tags, setTags] = useState<string[]>([]);
 
   const tiers = tiersData?.items ?? [];
 
@@ -52,6 +53,10 @@ export const CreatePostForm: React.FC<{
 
     if (data.image && data.image.length > 0) {
       form.append("image", data.image[0]);
+    }
+
+    if (tags.length > 0) {
+      form.append("tags", JSON.stringify(tags));
     }
 
     form.append("isPaid", isPaid ? "1" : "0");
@@ -65,6 +70,7 @@ export const CreatePostForm: React.FC<{
     reset();
     setIsPaid(false);
     setAccessTierId(null);
+    setTags([]);
     onCreated?.();
   };
 
@@ -105,6 +111,9 @@ export const CreatePostForm: React.FC<{
 
       <span className={styles.formFieldsTitle}>{t("Enter post image")}</span>
       <input type="file" accept="image/*" {...register("image")} />
+
+      <span className={styles.formFieldsTitle}>{t("tags.label")}</span>
+      <TagInput tags={tags} onChange={setTags} />
 
       <div className={styles.radioContainer}>
         <span className={styles.formFieldsTitle}>

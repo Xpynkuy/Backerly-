@@ -1,23 +1,34 @@
 import { baseApi } from "@shared/api/baseApi";
 import type { Comment, PostPage } from "../types/postTypes";
 
+type ProfilePostsArgs = {
+  username: string;
+  take?: number;
+  cursor?: string | null;
+  tag?: string | null;
+};
+
+type FeedArgs = {
+  take?: number;
+  cursor?: string | null;
+  tag?: string | null;
+};
+
 export const postApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getProfilePosts: builder.query<
-      PostPage,
-      { username: string; take?: number; cursor?: string | null }
-    >({
-      query: ({ username, take = 5, cursor }) => ({
+    getProfilePosts: builder.query<PostPage, ProfilePostsArgs>({
+      query: ({ username, take = 5, cursor, tag }) => ({
         url: `/users/${username}/posts`,
         method: "GET",
         params: {
           take,
           cursor: cursor ?? undefined,
+          tag: tag ?? undefined,
         },
       }),
 
       serializeQueryArgs: ({ endpointName, queryArgs }) => {
-        return `${endpointName}-${queryArgs.username}`;
+        return `${endpointName}-${queryArgs.username}-${queryArgs.tag ?? "all"}`;
       },
 
       merge: (currentCache, newData, meta) => {
@@ -27,7 +38,6 @@ export const postApi = baseApi.injectEndpoints({
           currentCache.nextCursor = newData.nextCursor;
           return;
         }
-
         const existingIds = new Set(currentCache.items.map((p) => p.id));
         for (const p of newData.items) {
           if (!existingIds.has(p.id)) currentCache.items.push(p);
@@ -39,7 +49,8 @@ export const postApi = baseApi.injectEndpoints({
         return (
           currentArg?.username !== previousArg?.username ||
           currentArg?.cursor !== previousArg?.cursor ||
-          currentArg?.take !== previousArg?.take
+          currentArg?.take !== previousArg?.take ||
+          currentArg?.tag !== previousArg?.tag
         );
       },
 
@@ -57,7 +68,10 @@ export const postApi = baseApi.injectEndpoints({
         method: "POST",
       }),
 
-      async onQueryStarted({ postId, username }, { dispatch, queryFulfilled }) {
+      async onQueryStarted(
+        { postId, username },
+        { dispatch, queryFulfilled },
+      ) {
         const patchProfile = dispatch(
           postApi.util.updateQueryData(
             "getProfilePosts",
@@ -117,7 +131,10 @@ export const postApi = baseApi.injectEndpoints({
         method: "DELETE",
       }),
 
-      async onQueryStarted({ postId, username }, { dispatch, queryFulfilled }) {
+      async onQueryStarted(
+        { postId, username },
+        { dispatch, queryFulfilled },
+      ) {
         const patch = dispatch(
           postApi.util.updateQueryData(
             "getProfilePosts",
@@ -135,6 +152,7 @@ export const postApi = baseApi.injectEndpoints({
         }
       },
     }),
+
     getComments: builder.query<{ items: Comment[] }, { postId: string }>({
       query: ({ postId }) => ({
         url: `/posts/${postId}/comments`,
@@ -152,7 +170,10 @@ export const postApi = baseApi.injectEndpoints({
         body: { text },
       }),
 
-      async onQueryStarted({ postId, username }, { dispatch, queryFulfilled }) {
+      async onQueryStarted(
+        { postId, username },
+        { dispatch, queryFulfilled },
+      ) {
         const patchPosts = dispatch(
           postApi.util.updateQueryData(
             "getProfilePosts",
@@ -168,9 +189,13 @@ export const postApi = baseApi.injectEndpoints({
           const { data } = await queryFulfilled;
 
           dispatch(
-            postApi.util.updateQueryData("getComments", { postId }, (draft) => {
-              draft.items.unshift(data.comment);
-            }),
+            postApi.util.updateQueryData(
+              "getComments",
+              { postId },
+              (draft) => {
+                draft.items.unshift(data.comment);
+              },
+            ),
           );
         } catch {
           patchPosts.undo();
@@ -180,6 +205,7 @@ export const postApi = baseApi.injectEndpoints({
         { type: "Comments", id: postId },
       ],
     }),
+
     createPost: builder.mutation<any, { username: string; form: FormData }>({
       query: ({ username, form }) => ({
         url: `/users/${username}/posts`,
@@ -207,35 +233,47 @@ export const postApi = baseApi.injectEndpoints({
       ],
     }),
 
-    getFeed: builder.query<PostPage, { take?: number; cursor?: string | null }>(
-      {
-        query: ({ take = 10, cursor }) => ({
-          url: `feed`,
-          method: "GET",
-          params: { take, cursor: cursor ?? undefined },
-        }),
+    getFeed: builder.query<PostPage, FeedArgs>({
+      query: ({ take = 10, cursor, tag }) => ({
+        url: `feed`,
+        method: "GET",
+        params: {
+          take,
+          cursor: cursor ?? undefined,
+          tag: tag ?? undefined,
+        },
+      }),
 
-        serializeQueryArgs: ({ endpointName }) => endpointName,
+      serializeQueryArgs: ({ endpointName }) => endpointName,
 
-        merge: (currentCache, newData, meta) => {
-          const cursor = meta.arg?.cursor ?? null;
-          if (!cursor) {
-            currentCache.items = newData.items;
-            currentCache.nextCursor = newData.nextCursor;
-            return;
-          }
-          const existingIds = new Set(currentCache.items.map((p) => p.id));
-          for (const p of newData.items) {
-            if (!existingIds.has(p.id)) currentCache.items.push(p);
-          }
+      merge: (currentCache, newData, meta) => {
+        const cursor = meta.arg?.cursor ?? null;
+        if (!cursor) {
+          currentCache.items = newData.items;
           currentCache.nextCursor = newData.nextCursor;
-        },
-
-        forceRefetch: ({ currentArg, previousArg }) => {
-          return currentArg?.cursor !== previousArg?.cursor;
-        },
+          return;
+        }
+        const existingIds = new Set(currentCache.items.map((p) => p.id));
+        for (const p of newData.items) {
+          if (!existingIds.has(p.id)) currentCache.items.push(p);
+        }
+        currentCache.nextCursor = newData.nextCursor;
       },
-    ),
+
+      forceRefetch: ({ currentArg, previousArg }) => {
+        return (
+          currentArg?.cursor !== previousArg?.cursor ||
+          currentArg?.tag !== previousArg?.tag
+        );
+      },
+    }),
+
+    getDashboardStats: builder.query<any, void>({
+      query: () => ({
+        url: "/stats/dashboard",
+        method: "GET",
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -250,4 +288,5 @@ export const {
   useGetCommentsQuery,
   useAddCommentMutation,
   useCreatePostMutation,
+  useGetDashboardStatsQuery,
 } = postApi;

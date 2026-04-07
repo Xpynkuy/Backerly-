@@ -8,6 +8,7 @@ export type Post = {
   title: string;
   description: string;
   imageUrl?: string | null;
+  tags?: string[];
   createdAt: string;
 
   author: PostAuthor;
@@ -17,9 +18,14 @@ export type Post = {
     comments: number;
   };
   locked?: boolean;
-  liked?: boolean; // NEW: whether current user liked it
-  isPaid?: boolean; // NEW
-  accessTier?: { id: string; title: string; description?: string; imageUrl?: string } | null;
+  liked?: boolean;
+  isPaid?: boolean;
+  accessTier?: {
+    id: string;
+    title: string;
+    description?: string;
+    imageUrl?: string;
+  } | null;
 };
 
 export type PostPage = {
