@@ -58,15 +58,21 @@ export const userApi = baseApi.injectEndpoints({
       ],
     }),
 
-    searchUsers: builder.query<
-      { items: User[] },
-      { query: string;  }
-    >({
-      query: ({ query}) => ({
+    searchUsers: builder.query<{ items: User[] }, { query: string }>({
+      query: ({ query }) => ({
         url: `/users/search`,
         method: "GET",
-        params: { q: query},
+        params: { q: query },
       }),
+    }),
+
+    activateCreator: builder.mutation<User, void>({
+      query: () => ({
+        url: `/users/activate-creator`,
+        method: "POST",
+      }),
+      invalidatesTags: (result) =>
+        result ? ["AuthMe", { type: "User", id: result.username }] : ["AuthMe"],
     }),
   }),
   overrideExisting: false,
@@ -78,4 +84,5 @@ export const {
   useUpdateBannerMutation,
   useUpdateDescriptionMutation,
   useLazySearchUsersQuery,
+  useActivateCreatorMutation,
 } = userApi;

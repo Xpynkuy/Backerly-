@@ -8,12 +8,12 @@ import {
 } from "../model/api/notificationApi";
 import { useTranslation } from "react-i18next";
 import styles from "./NotificationBell.module.scss";
-
+ 
 export const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
-
+ 
   const { data: countData } = useGetUnreadCountQuery(undefined, {
     pollingInterval: 5000,
   });
@@ -22,10 +22,10 @@ export const NotificationBell = () => {
     { skip: !isOpen },
   );
   const [markRead] = useMarkNotificationsReadMutation();
-
+ 
   const unreadCount = countData?.count ?? 0;
   const items = notifData?.items ?? [];
-
+ 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -35,14 +35,31 @@ export const NotificationBell = () => {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
-
+ 
   const handleOpen = () => {
     setIsOpen((prev) => !prev);
     if (!isOpen && unreadCount > 0) {
       markRead({});
     }
   };
-
+ 
+  const formatMessage = (item: {
+    type: string;
+    authorName: string;
+    message: string;
+  }) => {
+    if (item.type === "new_post") {
+      // Backend stores: `${username} published a new post: "${title}"`
+      const match = item.message.match(/:\s*"([^"]*)"/);
+      const postTitle = match ? match[1] : "";
+      return t("notif.newPost", {
+        author: item.authorName,
+        title: postTitle,
+      });
+    }
+    return item.message;
+  };
+ 
   const formatTime = (dateStr: string) => {
     const d = new Date(dateStr);
     const now = new Date();
@@ -55,7 +72,7 @@ export const NotificationBell = () => {
     const diffD = Math.floor(diffH / 24);
     return `${diffD} ${t("notif.dAgo")}`;
   };
-
+ 
   return (
     <div className={styles.container} ref={ref}>
       <button className={styles.bellButton} onClick={handleOpen}>
@@ -66,7 +83,7 @@ export const NotificationBell = () => {
           </span>
         )}
       </button>
-
+ 
       {isOpen && (
         <div className={styles.dropdown}>
           <h4 className={styles.dropdownTitle}>{t("notif.title")}</h4>
@@ -81,7 +98,7 @@ export const NotificationBell = () => {
                   className={`${styles.item} ${!item.isRead ? styles.unread : ""}`}
                   onClick={() => setIsOpen(false)}
                 >
-                  <span className={styles.itemText}>{item.message}</span>
+                  <span className={styles.itemText}>{formatMessage(item)}</span>
                   <span className={styles.itemTime}>
                     {formatTime(item.createdAt)}
                   </span>

@@ -1,5 +1,5 @@
 @use "../../../../src/app/styles/breakpoints.scss" as breakpoint;
-
+ 
 .container {
   display: flex;
   flex-direction: column;
@@ -10,21 +10,21 @@
   padding: 20px;
   box-sizing: border-box;
 }
-
+ 
 .title {
   font: var(--font-xl);
 }
-
+ 
 .grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-
+ 
   @media (max-width: breakpoint.$bp-sm) {
     grid-template-columns: repeat(2, 1fr);
   }
 }
-
+ 
 .statCard {
   display: flex;
   flex-direction: column;
@@ -34,44 +34,56 @@
   border: 1px solid var(--gray-color);
   border-radius: var(--border-radius);
 }
-
+ 
 .statValue {
   font: var(--font-xl);
   font-weight: 700;
   color: var(--primary-color);
 }
-
+ 
 .statLabel {
   font: var(--font-extraSmall);
   color: var(--text-color-gray);
 }
-
+ 
 .section {
   display: flex;
   flex-direction: column;
   gap: 12px;
-
+  padding: 5px;
+  min-width: 0;
+  border: 1px solid var(--gray-color);
+  border-radius: var(--border-radius);
+ 
   h3 {
     font: var(--font-m);
   }
 }
-
+ 
+.chartWrapper {
+  width: 100%;
+  min-width: 0;
+}
+ 
 .chart {
   display: flex;
   align-items: flex-end;
   gap: 8px;
   height: 160px;
-  padding: 12px 0;
+  padding: 12px 0 8px;
+  width: 100%;
+  min-width: 0;
 }
-
+ 
 .bar {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
 }
-
+ 
 .barFill {
   width: 100%;
   max-width: 40px;
@@ -80,27 +92,31 @@
   min-height: 4px;
   transition: height 0.3s;
 }
-
+ 
 .barFillAccent {
   background: var(--accent-color);
 }
-
+ 
 .barLabel {
   font-size: 10px;
   color: var(--text-color-gray);
+  text-align: center;
+  line-height: 1.2;
+  word-break: keep-all;
+  overflow-wrap: normal;
 }
-
+ 
 .barValue {
   font-size: 11px;
   font-weight: 600;
 }
-
+ 
 .topList {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
-
+ 
 .topItem {
   display: flex;
   align-items: center;
@@ -109,35 +125,35 @@
   border: 1px solid var(--gray-color);
   border-radius: var(--border-radius);
 }
-
+ 
 .topRank {
   font: var(--font-m);
   font-weight: 700;
   color: var(--primary-color);
   min-width: 24px;
 }
-
+ 
 .topInfo {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
-
+ 
 .topTitle {
   font: var(--font-s);
 }
-
+ 
 .topMeta {
   font: var(--font-extraSmall);
   color: var(--text-color-gray);
 }
-
+ 
 .tagCloud {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
-
+ 
 .tagItem {
   padding: 4px 12px;
   background: var(--bg-color-gray);

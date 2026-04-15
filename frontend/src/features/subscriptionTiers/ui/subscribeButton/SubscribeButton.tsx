@@ -9,13 +9,13 @@ import {
 import type { SubscriptionTier } from "../../model/types/types";
 import { useTranslation } from "react-i18next";
 import styles from "./SubscribeButton.module.scss";
-
+ 
 interface SubscribeButtonProps {
   username: string;
   tier: SubscriptionTier;
   isCurrentTier?: boolean;
 }
-
+ 
 export const SubscribeButton = ({
   username,
   tier,
@@ -27,32 +27,27 @@ export const SubscribeButton = ({
   const [subscribe, { isLoading: isSubscribing }] = useSubscribeMutation();
   const [unsubscribe, { isLoading: isUnsubscribing }] =
     useUnsubscribeMutation();
-  const { t } = useTranslation();
-
+  const { t, i18n } = useTranslation();
+ 
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+ 
   const loading = isFetching || isSubscribing || isUnsubscribing;
-
-  const subscribed = !!status?.subscribed;
-  const currentTierId = status?.tierId ?? null;
-  const currentTierPrice = status?.tierPriceCents ?? 0;
+ 
+  const paid = status?.paid ?? null;
+  const hasActivePaid = !!paid && paid.status === "active" && paid.hasAccess;
+  const currentTierId = paid?.tierId ?? null;
+  const currentTierPrice = paid?.tierPriceCents ?? 0;
   const tierPrice = tier.priceCents ?? 0;
-
-  const isSubscribedToThisTier = subscribed && currentTierId === tier.id;
-  const isUpgrade = subscribed && tierPrice > (currentTierPrice ?? 0);
+ 
+  const isSubscribedToThisTier = hasActivePaid && currentTierId === tier.id;
+  const isUpgrade = hasActivePaid && tierPrice > (currentTierPrice ?? 0);
   const isDowngrade =
-    subscribed &&
+    hasActivePaid &&
     !isSubscribedToThisTier &&
     tierPrice < (currentTierPrice ?? 0);
-
-  const handleSubscribeClick = () => {
-    if (isSubscribedToThisTier) {
-      setIsModalOpen(true);
-    } else {
-      setIsModalOpen(true);
-    }
-  };
-
+ 
+  const handleClick = () => setIsModalOpen(true);
+ 
   const handleConfirmSubscribe = async () => {
     try {
       await subscribe({ username, tierId: tier.id }).unwrap();
@@ -61,7 +56,7 @@ export const SubscribeButton = ({
       console.error("Subscribe failed", e);
     }
   };
-
+ 
   const handleConfirmUnsubscribe = async () => {
     try {
       await unsubscribe({ username }).unwrap();
@@ -70,9 +65,18 @@ export const SubscribeButton = ({
       console.error("Unsubscribe failed", e);
     }
   };
-
+ 
   const priceDisplay = tierPrice > 0 ? `${tierPrice / 100} ₽` : t("Free");
-
+ 
+  const dateLocale = i18n.language?.startsWith("ru") ? "ru-RU" : "en-US";
+  const formattedExpiry = paid?.expiresAt
+    ? new Date(paid.expiresAt).toLocaleDateString(dateLocale, {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      })
+    : null;
+ 
   const getButtonLabel = () => {
     if (loading) return "...";
     if (isSubscribedToThisTier) return t("sub.unsubscribe");
@@ -80,34 +84,33 @@ export const SubscribeButton = ({
     if (isDowngrade) return t("sub.downgrade");
     return t("sub.subscribe");
   };
-
+ 
   const getButtonColor = (): "PRIMARY" | "RED" | "GREEN" | "ACCENT" => {
     if (isSubscribedToThisTier) return "RED";
     if (isUpgrade) return "ACCENT";
     return "PRIMARY";
   };
-
+ 
   return (
     <>
       <MyButton
-        onClick={handleSubscribeClick}
+        onClick={handleClick}
         disabled={loading}
         size="FULL"
         color={getButtonColor()}
       >
         {getButtonLabel()}
       </MyButton>
-
+ 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <div className={styles.modalContent}>
           {isSubscribedToThisTier ? (
             <>
               <h3 className={styles.modalTitle}>{t("sub.unsubscribeTitle")}</h3>
               <p className={styles.modalDesc}>{t("sub.unsubscribeDesc")}</p>
-              {status?.expiresAt && (
+              {formattedExpiry && (
                 <p className={styles.modalExpiry}>
-                  {t("sub.accessUntil")}{" "}
-                  {new Date(status.expiresAt).toLocaleDateString()}
+                  {t("sub.accessUntil")} {formattedExpiry}
                 </p>
               )}
               <div className={styles.modalActions}>
@@ -132,7 +135,7 @@ export const SubscribeButton = ({
                     ? t("sub.downgradeTitle")
                     : t("sub.subscribeTitle")}
               </h3>
-
+ 
               <div className={styles.tierInfo}>
                 <span className={styles.tierName}>{tier.title}</span>
                 <span className={styles.tierPrice}>
@@ -142,7 +145,7 @@ export const SubscribeButton = ({
                   <p className={styles.tierDesc}>{tier.description}</p>
                 )}
               </div>
-
+ 
               <div className={styles.paymentSimulation}>
                 <div className={styles.paymentRow}>
                   <span>{t("sub.paymentMethod")}</span>
@@ -155,7 +158,7 @@ export const SubscribeButton = ({
                   <strong>{priceDisplay}</strong>
                 </div>
               </div>
-
+ 
               <div className={styles.modalActions}>
                 <MyButton onClick={handleConfirmSubscribe} disabled={loading}>
                   {loading ? "..." : t("sub.confirmPayment")}

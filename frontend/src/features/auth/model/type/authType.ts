@@ -11,6 +11,7 @@ export interface AuthResponse {
   user: {
     id: string;
     username: string;
+    isCreator?: boolean;
   }
 }
 export interface RegisterResponse {

@@ -1,19 +1,39 @@
 import { useGetDashboardStatsQuery } from "@entities/post/model/api/postApi";
+import { useGetMeQuery } from "@features/auth/model/api/authApi";
 import Loader from "@shared/ui/loader/Loader";
 import { useTranslation } from "react-i18next";
+import { Navigate } from "react-router-dom";
 import styles from "./DashboardPage.module.scss";
-
+ 
 export const DashboardPage = () => {
-  const { data, isLoading, isError } = useGetDashboardStatsQuery();
-  const { t } = useTranslation();
-
+  const { data: me, isLoading: isMeLoading } = useGetMeQuery();
+  const { data, isLoading, isError } = useGetDashboardStatsQuery(undefined, {
+    skip: !me?.isCreator,
+  });
+  const { t, i18n } = useTranslation();
+ 
+  if (isMeLoading) return <Loader />;
+  if (me && !me.isCreator) return <Navigate to="/" replace />;
+ 
   if (isLoading) return <Loader />;
   if (isError || !data) return <div>Failed to load stats</div>;
-
+ 
+  // "2025-03" -> "Мар 2025" / "Mar 2025"
+  const formatMonthLabel = (monthStr: string) => {
+    const [year, month] = monthStr.split("-").map(Number);
+    if (!year || !month) return monthStr;
+    const date = new Date(year, month - 1, 1);
+    const locale = i18n.language?.startsWith("ru") ? "ru-RU" : "en-US";
+    const monthName = date.toLocaleString(locale, { month: "short" });
+    const capitalized =
+      monthName.charAt(0).toUpperCase() + monthName.slice(1).replace(".", "");
+    return `${capitalized} ${year}`;
+  };
+ 
   return (
     <div className={styles.container}>
       <h2 className={styles.title}>{t("dashboard.title")}</h2>
-
+ 
       <div className={styles.grid}>
         <div className={styles.statCard}>
           <span className={styles.statValue}>{data.totalPosts}</span>
@@ -40,61 +60,71 @@ export const DashboardPage = () => {
           <span className={styles.statLabel}>{t("dashboard.freeSubs")}</span>
         </div>
       </div>
-
+ 
       {data.postsPerMonth.length > 0 && (
         <div className={styles.section}>
           <h3>{t("dashboard.postsChart")}</h3>
-          <div className={styles.chart}>
-            {data.postsPerMonth.map((item: any) => (
-              <div key={item.month} className={styles.bar}>
-                <div
-                  className={styles.barFill}
-                  style={{
-                    height: `${Math.max(
-                      (item.count /
-                        Math.max(
-                          ...data.postsPerMonth.map((i: any) => i.count),
-                        )) *
-                        120,
-                      4,
-                    )}px`,
-                  }}
-                />
-                <span className={styles.barLabel}>{item.month.slice(5)}</span>
-                <span className={styles.barValue}>{item.count}</span>
-              </div>
-            ))}
+          <div className={styles.chartWrapper}>
+            <div className={styles.chart}>
+              {data.postsPerMonth.map((item: any) => (
+                <div key={item.month} className={styles.bar}>
+                  <div
+                    className={styles.barFill}
+                    style={{
+                      height: `${Math.max(
+                        (item.count /
+                          Math.max(
+                            ...data.postsPerMonth.map((i: any) => i.count),
+                          )) *
+                          120,
+                        4,
+                      )}px`,
+                    }}
+                  />
+                  <span className={styles.barLabel}>
+                    {formatMonthLabel(item.month)}
+                  </span>
+                  <span className={styles.barValue}>{item.count}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
-
+ 
       {data.subscribersPerMonth.length > 0 && (
         <div className={styles.section}>
           <h3>{t("dashboard.subsChart")}</h3>
-          <div className={styles.chart}>
-            {data.subscribersPerMonth.map((item: any) => (
-              <div key={item.month} className={styles.bar}>
-                <div
-                  className={`${styles.barFill} ${styles.barFillAccent}`}
-                  style={{
-                    height: `${Math.max(
-                      (item.count /
-                        Math.max(
-                          ...data.subscribersPerMonth.map((i: any) => i.count),
-                        )) *
-                        120,
-                      4,
-                    )}px`,
-                  }}
-                />
-                <span className={styles.barLabel}>{item.month.slice(5)}</span>
-                <span className={styles.barValue}>{item.count}</span>
-              </div>
-            ))}
+          <div className={styles.chartWrapper}>
+            <div className={styles.chart}>
+              {data.subscribersPerMonth.map((item: any) => (
+                <div key={item.month} className={styles.bar}>
+                  <div
+                    className={`${styles.barFill} ${styles.barFillAccent}`}
+                    style={{
+                      height: `${Math.max(
+                        (item.count /
+                          Math.max(
+                            ...data.subscribersPerMonth.map(
+                              (i: any) => i.count,
+                            ),
+                          )) *
+                          120,
+                        4,
+                      )}px`,
+                    }}
+                  />
+                  <span className={styles.barLabel}>
+                    {formatMonthLabel(item.month)}
+                  </span>
+                  <span className={styles.barValue}>{item.count}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
-
+ 
       {data.topPosts.length > 0 && (
         <div className={styles.section}>
           <h3>{t("dashboard.topPosts")}</h3>
@@ -113,7 +143,7 @@ export const DashboardPage = () => {
           </div>
         </div>
       )}
-
+ 
       {data.popularTags.length > 0 && (
         <div className={styles.section}>
           <h3>{t("dashboard.popularTags")}</h3>

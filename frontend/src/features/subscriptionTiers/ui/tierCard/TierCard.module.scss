@@ -10,12 +10,12 @@
     border-radius: var(--border-radius);
     position: relative;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
-
+ 
     &.currentTier {
         border-color: var(--primary-color);
         box-shadow: 0 0 0 1px var(--primary-color);
     }
-
+ 
     .currentBadge {
         display: inline-flex;
         align-items: center;
@@ -26,12 +26,37 @@
         border-radius: var(--border-radius);
         font: var(--font-extraSmall);
     }
-
+ 
+    .cancelledNotice {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        padding: 8px 12px;
+        background: rgba(255, 170, 0, 0.1);
+        border: 1px solid rgba(255, 170, 0, 0.4);
+        border-radius: var(--border-radius);
+ 
+        strong {
+            font: var(--font-s);
+            color: #b36b00;
+        }
+ 
+        span {
+            font: var(--font-extraSmall);
+            color: var(--text-color-gray);
+        }
+    }
+ 
+    &.currentTier:has(.cancelledNotice) {
+        border-color: rgba(255, 170, 0, 0.6);
+        box-shadow: 0 0 0 1px rgba(255, 170, 0, 0.4);
+    }
+ 
     .cardHeader {
         display: flex;
         align-items: center;
         justify-content: space-between;
-
+ 
         .btn {
             display: flex;
             justify-content: end;    
@@ -40,16 +65,16 @@
             font: var(--font-m);
         }
     }
-
+ 
     .info {
         display: flex;
         flex-direction: column;
         gap: 10px;
-
+ 
         .title {
             font: var(--font-m);
         }
-
+ 
         .price {
             font: var(--font-s);
             background: var(--bg-color-gray);
@@ -57,7 +82,7 @@
             border-radius: var(--border-radius);
             padding: 4px;
         }
-
+ 
         .desc {
             font: var(--font-s);
             color: var(--text-color-gray);
@@ -66,7 +91,7 @@
             overflow-wrap: anywhere;
             min-width: 0;
         }
-
+ 
         .subscribers {
             display: flex;
             align-items: center;

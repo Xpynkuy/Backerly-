@@ -1,21 +1,21 @@
 import bcrypt from "bcrypt";
 import prisma from "../config/prisma";
 import { TokenService } from "./tokenService";
-
+ 
 const hashPassword = async (password: string): Promise<string> => {
   const salt = await bcrypt.genSalt(10);
   return bcrypt.hash(password, salt);
 };
-
+ 
 export const registerUser = async (username: string, password: string) => {
   const uniqueUser = await prisma.user.findUnique({ where: { username } });
-
+ 
   if (uniqueUser) {
     throw new Error("Username already exists");
   }
-
+ 
   const hashedPassword = await hashPassword(password);
-
+ 
   return prisma.user.create({
     data: {
       username,
@@ -23,10 +23,10 @@ export const registerUser = async (username: string, password: string) => {
     },
   });
 };
-
+ 
 export const loginUser = async (username: string, password: string) => {
   const user = await prisma.user.findUnique({ where: { username } });
-
+ 
   if (!user) {
     throw new Error("Invalid credentials");
   }
@@ -34,45 +34,46 @@ export const loginUser = async (username: string, password: string) => {
   if (!isMatch) {
     throw new Error("Invalid credentials");
   }
-
+ 
   const accessToken = TokenService.generateAccessToken({ userId: user.id });
   const refreshToken = TokenService.generateRefreshToken({ userId: user.id });
-
+ 
   await TokenService.saveRefreshToken(user.id, refreshToken);
-
+ 
   return {
     accessToken,
     refreshToken,
     user: {
       id: user.id,
       username: user.username,
+      isCreator: (user as any).isCreator ?? false,
     },
   };
 };
-
+ 
 export const refreshTokens = async (refreshToken: string) => {
   const storedToken = await TokenService.verifyRefreshToken(refreshToken);
-
+ 
   const newAccessToken = TokenService.generateAccessToken({
     userId: storedToken.userId,
   });
   const newRefreshToken = TokenService.generateRefreshToken({
     userId: storedToken.userId,
   });
-
+ 
   await TokenService.revokeRefreshToken(refreshToken);
   await TokenService.saveRefreshToken(storedToken.userId, newRefreshToken);
-
+ 
   return {
     accessToken: newAccessToken,
     refreshToken: newRefreshToken,
   };
 };
-
+ 
 export const logout = async (refreshToken: string) => {
   await TokenService.revokeRefreshToken(refreshToken);
 };
-
+ 
 export const getUserProfile = async (userId: string) => {
   return prisma.user.findUnique({
     where: { id: userId },
@@ -81,6 +82,7 @@ export const getUserProfile = async (userId: string) => {
       username: true,
       avatarUrl: true,
       bannerUrl: true,
+      isCreator: true,
     },
   });
 };

@@ -29,6 +29,8 @@ export const getUserByUsername = async (
       avatarUrl: true,
       bannerUrl: true,
       description: true,
+      isCreator: true,
+      creatorActivatedAt: true,
     },
   });
 
@@ -36,27 +38,30 @@ export const getUserByUsername = async (
     throw new ServiceError(404, "User not found");
   }
 
+  const now = new Date();
+
   const paidSubscriberCount = await prisma.subscription.count({
     where: {
       authorId: user.id,
+      kind: "paid",
       status: "active",
+      expiresAt: { gt: now },
       tier: { priceCents: { gt: 0 } },
     },
   });
 
+  // Followers = everyone who follows (free follow record).
+  // Paying users always have a follow row too, so this is the honest
+  // "how many people are subscribed to this author" number.
   const totalSubscriberCount = await prisma.subscription.count({
     where: {
       authorId: user.id,
+      kind: "follow",
       status: "active",
     },
   });
 
-  const followerCount = await prisma.subscription.count({
-    where: {
-      authorId: user.id,
-      status: "active",
-    },
-  });
+  const followerCount = totalSubscriberCount;
 
   return { ...user, paidSubscriberCount, totalSubscriberCount: followerCount };
 };
@@ -182,6 +187,7 @@ export const searchUsers = async ({
 
   const items = await prisma.user.findMany({
     where: {
+      isCreator: true,
       username: {
         contains: query.trim(),
         mode: "insensitive",
@@ -197,4 +203,41 @@ export const searchUsers = async ({
   });
 
   return { items };
+};
+
+export const activateCreatorMode = async (
+  authUserId: string,
+): Promise<UserProfileDto> => {
+  const user = await prisma.user.findUnique({
+    where: { id: authUserId },
+    select: { id: true, isCreator: true },
+  });
+
+  if (!user) {
+    throw new ServiceError(404, "User not found");
+  }
+
+  if (user.isCreator) {
+    throw new ServiceError(400, "Creator mode is already active");
+  }
+
+  const updated = await prisma.user.update({
+    where: { id: authUserId },
+    data: {
+      isCreator: true,
+      creatorActivatedAt: new Date(),
+    },
+    select: {
+      id: true,
+      username: true,
+      createdAt: true,
+      avatarUrl: true,
+      bannerUrl: true,
+      description: true,
+      isCreator: true,
+      creatorActivatedAt: true,
+    },
+  });
+
+  return updated;
 };

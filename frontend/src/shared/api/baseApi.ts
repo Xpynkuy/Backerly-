@@ -84,6 +84,8 @@ export const baseApi = createApi({
     "Comments",
     "Notifications",
     "NotificationCount",
+    "Payouts",
+    "Stats"
   ],
   endpoints: () => ({}),
 });

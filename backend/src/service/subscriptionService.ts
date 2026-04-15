@@ -14,14 +14,17 @@ import {
   CreateTierParams,
   UpdateTierParams,
   DeleteTierParams,
-  SubscribeParams,
-  UnsubscribeParams,
+  FollowAuthorParams,
+  UnfollowAuthorParams,
+  SubscribeToTierParams,
+  CancelPaidSubscriptionParams,
   GetSubscriptionStatusParams,
   FetchSubscriptionsParams,
   TiersResponse,
   SubscriptionsResponse,
   SubscriptionStatusResponse,
-  SubscribeResponse,
+  FollowResponse,
+  PaidActionResponse,
 } from "../types/subscriptionTypes";
 
 const SUBSCRIPTION_DURATION_DAYS = 30;
@@ -32,14 +35,41 @@ function addDays(date: Date, days: number): Date {
   return result;
 }
 
-function isSubscriptionActive(sub: {
-  status: string;
-  expiresAt: Date | null;
-}): boolean {
-  if (sub.status !== "active") return false;
-  if (!sub.expiresAt) return true;
-  return new Date() < sub.expiresAt;
+/**
+ * Lazy cleanup: delete any paid subscriptions of this user that have expired.
+ * Paid records past their expiresAt are simply removed. Follow records are
+ * independent and untouched.
+ */
+async function cleanupExpiredPaid(subscriberId: string): Promise<void> {
+  await prisma.subscription.deleteMany({
+    where: {
+      subscriberId,
+      kind: "paid",
+      expiresAt: { lte: new Date() },
+    },
+  });
 }
+
+/**
+ * Same cleanup but scoped to a particular author (for profile view).
+ */
+async function cleanupExpiredPaidForAuthor(
+  subscriberId: string,
+  authorId: string,
+): Promise<void> {
+  await prisma.subscription.deleteMany({
+    where: {
+      subscriberId,
+      authorId,
+      kind: "paid",
+      expiresAt: { lte: new Date() },
+    },
+  });
+}
+
+// ============================================================================
+// TIERS (owner-only management)
+// ============================================================================
 
 export const fetchTiersByUsername = async ({
   username,
@@ -62,7 +92,11 @@ export const fetchTiersByUsername = async ({
       _count: {
         select: {
           subscriptions: {
-            where: { status: "active" },
+            where: {
+              kind: "paid",
+              status: "active",
+              expiresAt: { gt: new Date() },
+            },
           },
         },
       },
@@ -184,7 +218,11 @@ export const updateTierById = async ({
       _count: {
         select: {
           subscriptions: {
-            where: { status: "active" },
+            where: {
+              kind: "paid",
+              status: "active",
+              expiresAt: { gt: new Date() },
+            },
           },
         },
       },
@@ -235,9 +273,9 @@ export const deleteTierById = async ({
     data: { isPaid: false, accessTierId: null },
   });
 
-  await prisma.subscription.updateMany({
-    where: { tierId, status: "active" },
-    data: { status: "cancelled", cancelledAt: new Date() },
+  // Delete paid subscriptions tied to this tier. Follow records are untouched.
+  await prisma.subscription.deleteMany({
+    where: { tierId, kind: "paid" },
   });
 
   if (tier.imageUrl) {
@@ -247,12 +285,85 @@ export const deleteTierById = async ({
   await prisma.subscriptionTier.delete({ where: { id: tierId } });
 };
 
-export const subscribeToAuthorService = async ({
+// ============================================================================
+// FOLLOW (free)
+// ============================================================================
+
+export const followAuthorService = async ({
+  username,
+  authUserId,
+}: FollowAuthorParams): Promise<FollowResponse> => {
+  if (!authUserId) throw new UnauthorizedError();
+
+  const author = await prisma.user.findUnique({
+    where: { username },
+    select: { id: true },
+  });
+
+  if (!author) throw new NotFoundError("User not found");
+  if (author.id === authUserId) {
+    throw new BadRequestError("Cannot follow yourself");
+  }
+
+  await prisma.subscription.upsert({
+    where: {
+      subscriberId_authorId_kind: {
+        subscriberId: authUserId,
+        authorId: author.id,
+        kind: "follow",
+      },
+    },
+    create: {
+      subscriberId: authUserId,
+      authorId: author.id,
+      kind: "follow",
+      status: "active",
+      tierId: null,
+    },
+    update: {
+      status: "active",
+      cancelledAt: null,
+    },
+  });
+
+  return { follow: { active: true } };
+};
+
+export const unfollowAuthorService = async ({
+  username,
+  authUserId,
+}: UnfollowAuthorParams): Promise<FollowResponse> => {
+  if (!authUserId) throw new UnauthorizedError();
+
+  const author = await prisma.user.findUnique({
+    where: { username },
+    select: { id: true },
+  });
+
+  if (!author) throw new NotFoundError("User not found");
+
+  await prisma.subscription.deleteMany({
+    where: {
+      subscriberId: authUserId,
+      authorId: author.id,
+      kind: "follow",
+    },
+  });
+
+  return { follow: { active: false } };
+};
+
+// ============================================================================
+// PAID SUBSCRIPTION
+// ============================================================================
+
+export const subscribeToTierService = async ({
   username,
   authUserId,
   tierId,
-}: SubscribeParams): Promise<SubscribeResponse> => {
+}: SubscribeToTierParams): Promise<PaidActionResponse> => {
   if (!authUserId) throw new UnauthorizedError();
+  if (!tierId) throw new BadRequestError("tierId is required");
 
   const author = await prisma.user.findUnique({
     where: { username },
@@ -265,83 +376,180 @@ export const subscribeToAuthorService = async ({
     throw new BadRequestError("Cannot subscribe to yourself");
   }
 
-  // Validate tier exists and belongs to author
-  if (tierId) {
-    const tier = await prisma.subscriptionTier.findUnique({
-      where: { id: tierId },
-      select: { authorId: true, isActive: true },
-    });
-    if (!tier || tier.authorId !== author.id) {
-      throw new BadRequestError("Invalid tier");
-    }
-    if (!tier.isActive) {
-      throw new BadRequestError("This tier is no longer available");
-    }
-  }
-
-  const now = new Date();
-  // Follow (no tier) = permanent, paid tier = 30 days
-  const expiresAt = tierId ? addDays(now, SUBSCRIPTION_DURATION_DAYS) : null;
-
-  const existing = await prisma.subscription.findFirst({
-    where: { subscriberId: authUserId, authorId: author.id },
+  const tier = await prisma.subscriptionTier.findUnique({
+    where: { id: tierId },
+    select: { authorId: true, isActive: true, priceCents: true },
   });
 
-  if (existing) {
-    const updateData: any = {
-      tierId: tierId ?? null,
-      status: "active",
-      cancelledAt: null,
-    };
-
-    if (tierId) {
-      // Paid subscription — set/reset expiry
-      if (!isSubscriptionActive(existing) || !existing.tierId) {
-        updateData.startDate = now;
-        updateData.expiresAt = expiresAt;
-      }
-    } else {
-      // Downgrade to free follow — remove expiry
-      updateData.expiresAt = null;
-      updateData.startDate = existing.startDate;
-    }
-
-    await prisma.subscription.update({
-      where: { id: existing.id },
-      data: updateData,
-    });
-
-    return {
-      subscribed: true,
-      status: "active",
-      expiresAt:
-        (updateData.expiresAt ?? existing.expiresAt)?.toISOString() ?? null,
-    };
+  if (!tier || tier.authorId !== author.id) {
+    throw new BadRequestError("Invalid tier");
+  }
+  if (!tier.isActive) {
+    throw new BadRequestError("This tier is no longer available");
   }
 
-  // New subscription
-  const sub = await prisma.subscription.create({
-    data: {
+  // Clean up any expired paid record for this pair first
+  await cleanupExpiredPaidForAuthor(authUserId, author.id);
+
+  const now = new Date();
+  const expiresAt = addDays(now, SUBSCRIPTION_DURATION_DAYS);
+
+  // Auto-create follow record (Boosty: paying also means following)
+  await prisma.subscription.upsert({
+    where: {
+      subscriberId_authorId_kind: {
+        subscriberId: authUserId,
+        authorId: author.id,
+        kind: "follow",
+      },
+    },
+    create: {
       subscriberId: authUserId,
       authorId: author.id,
-      tierId: tierId ?? null,
+      kind: "follow",
       status: "active",
-      startDate: now,
-      expiresAt,
+      tierId: null,
+    },
+    update: {
+      status: "active",
+      cancelledAt: null,
     },
   });
 
+  // Look at existing paid record to decide: first purchase, resubscribe,
+  // upgrade, or downgrade.
+  const existingPaid = await prisma.subscription.findUnique({
+    where: {
+      subscriberId_authorId_kind: {
+        subscriberId: authUserId,
+        authorId: author.id,
+        kind: "paid",
+      },
+    },
+    include: { tier: { select: { priceCents: true } } },
+  });
+
+  const hasActiveAccess =
+    !!existingPaid && !!existingPaid.expiresAt && now < existingPaid.expiresAt;
+
+  let paid;
+  let paymentToCreate: { gross: number; kind: string } | null = null;
+
+  if (!hasActiveAccess) {
+    // First purchase, or previous period fully expired.
+    // Full price, fresh 30-day period.
+    paid = await prisma.subscription.upsert({
+      where: {
+        subscriberId_authorId_kind: {
+          subscriberId: authUserId,
+          authorId: author.id,
+          kind: "paid",
+        },
+      },
+      create: {
+        subscriberId: authUserId,
+        authorId: author.id,
+        kind: "paid",
+        tierId,
+        status: "active",
+        startDate: now,
+        expiresAt,
+        cancelledAt: null,
+      },
+      update: {
+        tierId,
+        status: "active",
+        startDate: now,
+        expiresAt,
+        cancelledAt: null,
+      },
+    });
+    paymentToCreate = {
+      gross: tier.priceCents ?? 0,
+      kind: "subscription",
+    };
+  } else if (existingPaid!.tierId === tierId) {
+    // Same tier, still within paid period — this is a resubscribe after a
+    // soft cancel. Reactivate, no payment, keep expiresAt.
+    paid = await prisma.subscription.update({
+      where: { id: existingPaid!.id },
+      data: {
+        status: "active",
+        cancelledAt: null,
+      },
+    });
+  } else {
+    // Different tier, still within paid period — upgrade or downgrade.
+    const oldPrice = existingPaid!.tier?.priceCents ?? 0;
+    const newPrice = tier.priceCents ?? 0;
+    const totalDays = SUBSCRIPTION_DURATION_DAYS;
+    const msPerDay = 24 * 60 * 60 * 1000;
+    const daysLeft = Math.max(
+      Math.ceil(
+        (existingPaid!.expiresAt!.getTime() - now.getTime()) / msPerDay,
+      ),
+      0,
+    );
+
+    if (newPrice > oldPrice) {
+      // Upgrade: charge prorated difference for the remaining period.
+      const unusedCreditCents = Math.floor((oldPrice * daysLeft) / totalDays);
+      const newCostCents = Math.floor((newPrice * daysLeft) / totalDays);
+      const diffCents = Math.max(newCostCents - unusedCreditCents, 0);
+
+      paid = await prisma.subscription.update({
+        where: { id: existingPaid!.id },
+        data: {
+          tierId,
+          status: "active",
+          cancelledAt: null,
+          // expiresAt intentionally not touched
+        },
+      });
+
+      if (diffCents > 0) {
+        paymentToCreate = { gross: diffCents, kind: "upgrade" };
+      }
+    } else {
+      // Downgrade: just swap the tier, no new payment, no refund.
+      // expiresAt stays the same.
+      paid = await prisma.subscription.update({
+        where: { id: existingPaid!.id },
+        data: {
+          tierId,
+          status: "active",
+          cancelledAt: null,
+        },
+      });
+    }
+  }
+
+  if (paymentToCreate) {
+    await prisma.payment.create({
+      data: {
+        authorId: author.id,
+        subscriberId: authUserId,
+        tierId,
+        grossCents: paymentToCreate.gross,
+        kind: paymentToCreate.kind,
+      },
+    });
+  }
+
   return {
-    subscribed: true,
-    status: "active",
-    expiresAt: sub.expiresAt?.toISOString() ?? null,
+    paid: {
+      tierId,
+      status: paid.status,
+      hasAccess: true,
+      expiresAt: paid.expiresAt?.toISOString() ?? null,
+    },
   };
 };
 
-export const unsubscribeFromAuthorService = async ({
+export const cancelPaidSubscriptionService = async ({
   username,
   authUserId,
-}: UnsubscribeParams): Promise<SubscribeResponse> => {
+}: CancelPaidSubscriptionParams): Promise<PaidActionResponse> => {
   if (!authUserId) throw new UnauthorizedError();
 
   const author = await prisma.user.findUnique({
@@ -351,48 +559,58 @@ export const unsubscribeFromAuthorService = async ({
 
   if (!author) throw new NotFoundError("User not found");
 
-  const existing = await prisma.subscription.findFirst({
-    where: { subscriberId: authUserId, authorId: author.id },
+  const paid = await prisma.subscription.findUnique({
+    where: {
+      subscriberId_authorId_kind: {
+        subscriberId: authUserId,
+        authorId: author.id,
+        kind: "paid",
+      },
+    },
   });
 
-  if (!existing) {
-    return { subscribed: false, status: "none", expiresAt: null };
+  if (!paid) {
+    return { paid: null };
   }
 
-  if (existing.tierId) {
-    // Paid subscriber cancels — soft cancel, keep tier access until expiresAt
-    await prisma.subscription.update({
-      where: { id: existing.id },
-      data: {
-        status: "cancelled",
-        cancelledAt: new Date(),
-      },
-    });
-    return {
-      subscribed: false,
+  const now = new Date();
+
+  // If already expired — just delete
+  if (paid.expiresAt && now >= paid.expiresAt) {
+    await prisma.subscription.delete({ where: { id: paid.id } });
+    return { paid: null };
+  }
+
+  // Soft cancel — access preserved until expiresAt
+  const updated = await prisma.subscription.update({
+    where: { id: paid.id },
+    data: {
       status: "cancelled",
-      expiresAt: existing.expiresAt?.toISOString() ?? null,
-    };
-  }
+      cancelledAt: now,
+    },
+  });
 
-  // Free follower unfollows — delete entirely
-  await prisma.subscription.delete({ where: { id: existing.id } });
-
-  return { subscribed: false, status: "none", expiresAt: null };
+  return {
+    paid: {
+      tierId: updated.tierId as string,
+      status: updated.status,
+      hasAccess: true,
+      expiresAt: updated.expiresAt?.toISOString() ?? null,
+    },
+  };
 };
+
+// ============================================================================
+// STATUS
+// ============================================================================
 
 export const getSubscriptionStatusService = async ({
   username,
   authUserId,
 }: GetSubscriptionStatusParams): Promise<SubscriptionStatusResponse> => {
   const empty: SubscriptionStatusResponse = {
-    subscribed: false,
-    followed: false,
-    tierId: null,
-    tierTitle: null,
-    tierPriceCents: null,
-    status: null,
-    expiresAt: null,
+    follow: { active: false },
+    paid: null,
   };
 
   if (!authUserId) return empty;
@@ -404,57 +622,52 @@ export const getSubscriptionStatusService = async ({
 
   if (!author) throw new NotFoundError("User not found");
 
-  const sub = await prisma.subscription.findFirst({
-    where: { subscriberId: authUserId, authorId: author.id },
+  // Lazy cleanup of expired paid subs for this pair
+  await cleanupExpiredPaidForAuthor(authUserId, author.id);
+
+  const records = await prisma.subscription.findMany({
+    where: {
+      subscriberId: authUserId,
+      authorId: author.id,
+    },
     include: {
       tier: { select: { id: true, title: true, priceCents: true } },
     },
   });
 
-  if (!sub) return empty;
+  const followRec = records.find((r) => r.kind === "follow");
+  const paidRec = records.find((r) => r.kind === "paid");
 
   const now = new Date();
+  let paid: SubscriptionStatusResponse["paid"] = null;
 
-  // Check if paid tier expired
-  if (sub.tierId && sub.expiresAt && now >= sub.expiresAt) {
-    // Expired — downgrade to free follow
-    await prisma.subscription.update({
-      where: { id: sub.id },
-      data: {
-        tierId: null,
-        status: "active",
-        expiresAt: null,
-        cancelledAt: null,
-      },
-    });
-    return {
-      subscribed: false,
-      followed: true,
-      tierId: null,
-      tierTitle: null,
-      tierPriceCents: null,
-      status: "active",
-      expiresAt: null,
+  if (paidRec && paidRec.tierId) {
+    const hasAccess =
+      (paidRec.status === "active" ||
+        (paidRec.status === "cancelled" &&
+          !!paidRec.expiresAt &&
+          now < paidRec.expiresAt)) &&
+      (!paidRec.expiresAt || now < paidRec.expiresAt);
+
+    paid = {
+      tierId: paidRec.tierId,
+      tierTitle: paidRec.tier?.title ?? null,
+      tierPriceCents: paidRec.tier?.priceCents ?? null,
+      status: paidRec.status,
+      hasAccess,
+      expiresAt: paidRec.expiresAt?.toISOString() ?? null,
     };
   }
 
-  const hasTier = !!sub.tierId;
-  // Cancelled but not expired — still has tier access
-  const hasAccess = !!(
-    hasTier &&
-    (sub.status === "active" ||
-      (sub.status === "cancelled" && sub.expiresAt && now < sub.expiresAt))
-  );
   return {
-    subscribed: hasAccess,
-    followed: true,
-    tierId: hasAccess ? sub.tierId : null,
-    tierTitle: hasAccess ? (sub.tier?.title ?? null) : null,
-    tierPriceCents: hasAccess ? (sub.tier?.priceCents ?? null) : null,
-    status: sub.status,
-    expiresAt: sub.expiresAt?.toISOString() ?? null,
+    follow: { active: !!followRec && followRec.status === "active" },
+    paid,
   };
 };
+
+// ============================================================================
+// LIST SUBSCRIPTIONS (for /subscriptions page)
+// ============================================================================
 
 export const fetchSubscriptionsByUsername = async ({
   username,
@@ -470,7 +683,10 @@ export const fetchSubscriptionsByUsername = async ({
     throw new ForbiddenError("You can only view your own subscriptions");
   }
 
-  const subs = await prisma.subscription.findMany({
+  // Lazy cleanup of expired paid subs for this user
+  await cleanupExpiredPaid(user.id);
+
+  const records = await prisma.subscription.findMany({
     where: { subscriberId: user.id },
     orderBy: { createdAt: "desc" },
     include: {
@@ -489,31 +705,63 @@ export const fetchSubscriptionsByUsername = async ({
     },
   });
 
-  const now = new Date();
-  for (const s of subs) {
-    if (s.status === "active" && s.expiresAt && now >= s.expiresAt) {
-      await prisma.subscription.update({
-        where: { id: s.id },
-        data: { status: "expired" },
-      });
-      s.status = "expired";
+  // Group by author
+  const byAuthor = new Map<
+    string,
+    {
+      author: (typeof records)[number]["author"];
+      follow: (typeof records)[number] | null;
+      paid: (typeof records)[number] | null;
     }
+  >();
+
+  for (const r of records) {
+    const entry = byAuthor.get(r.authorId) ?? {
+      author: r.author,
+      follow: null,
+      paid: null,
+    };
+    if (r.kind === "follow") entry.follow = r;
+    else if (r.kind === "paid") entry.paid = r;
+    byAuthor.set(r.authorId, entry);
   }
 
-  const items: SubscribedAuthorDto[] = subs.map((s) => ({
-    id: s.author.id,
-    username: s.author.username,
-    avatarUrl: s.author.avatarUrl ?? null,
-    bannerUrl: s.author.bannerUrl ?? null,
-    description: s.author.description ?? null,
-    tierId: s.tierId ?? null,
-    tierTitle: s.tier?.title ?? null,
-    tierPriceCents: s.tier?.priceCents ?? null,
-    status: s.status,
-    startDate: s.startDate.toISOString(),
-    expiresAt: s.expiresAt?.toISOString() ?? null,
-    cancelledAt: s.cancelledAt?.toISOString() ?? null,
-  }));
+  const now = new Date();
+
+  const items: SubscribedAuthorDto[] = Array.from(byAuthor.values()).map(
+    ({ author, follow, paid }) => {
+      const paidBlock = paid
+        ? {
+            tierId: paid.tierId as string,
+            tierTitle: paid.tier?.title ?? null,
+            tierPriceCents: paid.tier?.priceCents ?? null,
+            status: paid.status,
+            hasAccess:
+              (paid.status === "active" ||
+                (paid.status === "cancelled" &&
+                  !!paid.expiresAt &&
+                  now < paid.expiresAt)) &&
+              (!paid.expiresAt || now < paid.expiresAt),
+            startDate: paid.startDate.toISOString(),
+            expiresAt: paid.expiresAt?.toISOString() ?? null,
+            cancelledAt: paid.cancelledAt?.toISOString() ?? null,
+          }
+        : null;
+
+      return {
+        id: author.id,
+        username: author.username,
+        avatarUrl: author.avatarUrl ?? null,
+        bannerUrl: author.bannerUrl ?? null,
+        description: author.description ?? null,
+        follow: {
+          active: !!follow && follow.status === "active",
+          startDate: follow?.startDate.toISOString() ?? null,
+        },
+        paid: paidBlock,
+      };
+    },
+  );
 
   return { items };
 };

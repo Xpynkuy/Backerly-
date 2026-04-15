@@ -67,6 +67,7 @@ export const postApi = baseApi.injectEndpoints({
         url: `/posts/${postId}/like`,
         method: "POST",
       }),
+       invalidatesTags: ["Stats" as any],
 
       async onQueryStarted(
         { postId, username },
@@ -130,7 +131,10 @@ export const postApi = baseApi.injectEndpoints({
         url: `/posts/${postId}`,
         method: "DELETE",
       }),
-
+      invalidatesTags: (_r, _e, { username }) => [
+        { type: "Posts" as const, id: username },
+        "Stats" as any,
+      ],
       async onQueryStarted(
         { postId, username },
         { dispatch, queryFulfilled },
@@ -203,6 +207,7 @@ export const postApi = baseApi.injectEndpoints({
       },
       invalidatesTags: (_r, _e, { postId }) => [
         { type: "Comments", id: postId },
+        "Stats" as any,
       ],
     }),
 
@@ -216,6 +221,7 @@ export const postApi = baseApi.injectEndpoints({
         { type: "Posts" as const, id: username },
         "NotificationCount" as any,
         "Notifications" as any,
+        "Stats" as any,
       ],
     }),
 
@@ -230,6 +236,7 @@ export const postApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: (_r, _e, { username }) => [
         { type: "Posts" as const, id: username },
+        "Stats" as any,
       ],
     }),
 
@@ -273,6 +280,7 @@ export const postApi = baseApi.injectEndpoints({
         url: "/stats/dashboard",
         method: "GET",
       }),
+      providesTags: ["Stats" as any],
     }),
   }),
   overrideExisting: false,

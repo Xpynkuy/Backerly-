@@ -11,6 +11,7 @@ import {
   User,
   Rss,
   BarChart3,
+  Wallet,
 } from "lucide-react";
 import { AppLink } from "@shared/ui/AppLink/AppLink";
 import Avatar from "@shared/ui/avatar/Avatar";
@@ -24,7 +25,6 @@ export function DropDown() {
   const { data: me, isLoading } = useGetMeQuery();
   const [logout] = useLogoutMutation();
   const navigate = useNavigate();
-
   const { t } = useTranslation();
 
   if (isLoading || !me) return null;
@@ -81,13 +81,26 @@ export function DropDown() {
           )}
         </MenuItem>
 
-        <MenuItem>
-          {() => (
-            <AppLink icon={<BarChart3 size={18} />} to="/dashboard">
-              {t("Dashboard")}
-            </AppLink>
-          )}
-        </MenuItem>
+        {me.isCreator && (
+          <MenuItem>
+            {() => (
+              <AppLink icon={<BarChart3 size={18} />} to="/dashboard">
+                {t("Dashboard")}
+              </AppLink>
+            )}
+          </MenuItem>
+        )}
+
+        {me.isCreator && (
+          <MenuItem>
+            {() => (
+              <AppLink icon={<Wallet size={18} />} to="/payouts">
+                {t("payouts.menu")}
+              </AppLink>
+            )}
+          </MenuItem>
+        )}
+
         <hr className={styles.hr} />
 
         <MenuItem>

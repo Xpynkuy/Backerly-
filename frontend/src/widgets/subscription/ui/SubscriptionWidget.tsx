@@ -13,42 +13,42 @@ import type { SubscriptionTier } from "@features/subscriptionTiers/model/types/t
 import styles from "./SubscriptionWidget.module.scss";
 import { EditTierModal } from "@features/subscriptionTiers";
 import { FollowButton } from "@features/subscriptionTiers/ui/followButton/FollowButton";
-
+ 
 interface SubscriptionTiersWidgetProps {
   username: string;
   isMyProfile: boolean;
 }
-
+ 
 export const SubscriptionTiersWidget = memo(
   ({ username, isMyProfile }: SubscriptionTiersWidgetProps) => {
     const { data, isFetching, isError, refetch } = useGetTiersQuery({
       username,
     });
     const tiers = data?.items ?? [];
-
+ 
     const { data: subStatus } = useGetSubscriptionStatusQuery(
       { username },
       { skip: isMyProfile },
     );
-
+ 
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [editingTier, setEditingTier] = useState<SubscriptionTier | null>(
       null,
     );
     const { t } = useTranslation();
-
+ 
     const handleCreated = useCallback(() => {
       refetch();
       setIsCreateOpen(false);
     }, [refetch]);
-
+ 
     const handleUpdated = useCallback(() => {
       refetch();
       setEditingTier(null);
     }, [refetch]);
-
+ 
     if (isError) return <div>Failed to load tiers</div>;
-
+ 
     return (
       <div className={styles.container}>
         {isMyProfile && (
@@ -56,14 +56,14 @@ export const SubscriptionTiersWidget = memo(
             <MyButton size="FULL" onClick={() => setIsCreateOpen(true)}>
               {renderWithLineBreaks(t("subscription.createTier"))}
             </MyButton>
-
+ 
             <CreateTierModal
               isOpen={isCreateOpen}
               onClose={() => setIsCreateOpen(false)}
               username={username}
               onCreated={handleCreated}
             />
-
+ 
             {editingTier && (
               <EditTierModal
                 isOpen={!!editingTier}
@@ -75,11 +75,11 @@ export const SubscriptionTiersWidget = memo(
             )}
           </>
         )}
-
+ 
         <h3>{renderWithLineBreaks(t("subscription.level"))}</h3>
-
+ 
         {isFetching && tiers.length === 0 && <div>Loading...</div>}
-
+ 
         <TierList
           tiers={tiers}
           renderItem={(tier) => (
@@ -90,15 +90,15 @@ export const SubscriptionTiersWidget = memo(
               username={username}
               isCurrentTier={
                 !isMyProfile &&
-                subStatus?.subscribed === true &&
-                subStatus?.tierId === tier.id
+                !!subStatus?.paid &&
+                subStatus?.paid?.tierId === tier.id
               }
               onDelete={refetch}
               onEdit={(t) => setEditingTier(t)}
             />
           )}
         />
-
+ 
         {tiers.length === 0 && !isFetching && (
           <div>{renderWithLineBreaks(t("subscription.noTiers"))}</div>
         )}

@@ -34,3 +34,30 @@
   font: var(--font-s);
   color: var(--text-color-gray);
 }
+
+.creatorCta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  margin-top: 8px;
+  width: 100%;
+  max-width: 420px;
+  border: 1px solid var(--primary-color);
+  border-radius: var(--border-radius);
+  background: rgba(114, 114, 209, 0.06);
+}
+
+.creatorCtaHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary-color);
+  font: var(--font-m);
+}
+
+.creatorCtaDesc {
+  font: var(--font-s);
+  color: var(--text-color-gray);
+  margin: 0;
+}

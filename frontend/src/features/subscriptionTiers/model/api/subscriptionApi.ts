@@ -4,7 +4,7 @@ import type {
   SubscriptionStatus,
   SubscriptionUser,
 } from "../types/types";
-
+ 
 export const subscriptionApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getTiers: builder.query<
@@ -19,7 +19,7 @@ export const subscriptionApi = baseApi.injectEndpoints({
         { type: "Tiers" as const, id: username },
       ],
     }),
-
+ 
     createTier: builder.mutation<
       SubscriptionTier,
       { username: string; form: FormData }
@@ -33,7 +33,7 @@ export const subscriptionApi = baseApi.injectEndpoints({
         { type: "Tiers" as const, id: username },
       ],
     }),
-
+ 
     updateTier: builder.mutation<
       SubscriptionTier,
       { username: string; tierId: string; form: FormData }
@@ -47,7 +47,7 @@ export const subscriptionApi = baseApi.injectEndpoints({
         { type: "Tiers" as const, id: username },
       ],
     }),
-
+ 
     deleteTier: builder.mutation<void, { username: string; tierId: string }>({
       query: ({ username, tierId }) => ({
         url: `/users/${username}/tiers/${tierId}`,
@@ -57,7 +57,7 @@ export const subscriptionApi = baseApi.injectEndpoints({
         { type: "Tiers" as const, id: username },
       ],
     }),
-
+ 
     getSubscriptions: builder.query<
       { items: SubscriptionUser[] },
       { username: string }
@@ -70,10 +70,46 @@ export const subscriptionApi = baseApi.injectEndpoints({
         { type: "Subscriptions" as const, id: username },
       ],
     }),
-
+ 
+    // Follow (free) — independent
+    follow: builder.mutation<
+      { follow: { active: boolean } },
+      { username: string }
+    >({
+      query: ({ username }) => ({
+        url: `/users/${username}/follow`,
+        method: "POST",
+      }),
+      invalidatesTags: (_r, _e, { username }) => [
+        { type: "SubscriptionStatus" as const, id: username },
+        "Subscriptions" as any,
+        { type: "Posts" as const, id: username },
+        { type: "User" as const, id: username },
+        "Stats" as any,
+      ],
+    }),
+ 
+    unfollow: builder.mutation<
+      { follow: { active: boolean } },
+      { username: string }
+    >({
+      query: ({ username }) => ({
+        url: `/users/${username}/unfollow`,
+        method: "POST",
+      }),
+      invalidatesTags: (_r, _e, { username }) => [
+        { type: "SubscriptionStatus" as const, id: username },
+        "Subscriptions" as any,
+        { type: "Posts" as const, id: username },
+        { type: "User" as const, id: username },
+        "Stats" as any,
+      ],
+    }),
+ 
+    // Paid subscription — independent
     subscribe: builder.mutation<
-      { subscribed: boolean; status: string; expiresAt: string | null },
-      { username: string; tierId?: string | null }
+      { paid: SubscriptionStatus["paid"] },
+      { username: string; tierId: string }
     >({
       query: ({ username, tierId }) => ({
         url: `/users/${username}/subscribe`,
@@ -86,46 +122,12 @@ export const subscriptionApi = baseApi.injectEndpoints({
         { type: "Posts" as const, id: username },
         { type: "Tiers" as const, id: username },
         { type: "User" as const, id: username },
+        "Stats" as any,
       ],
     }),
-
-    follow: builder.mutation<
-      { subscribed: boolean; status: string; expiresAt: string | null },
-      { username: string }
-    >({
-      query: ({ username }) => ({
-        url: `/users/${username}/subscribe`,
-        method: "POST",
-        body: { tierId: null },
-      }),
-      invalidatesTags: (_r, _e, { username }) => [
-        { type: "SubscriptionStatus" as const, id: username },
-        "Subscriptions" as any,
-        { type: "Posts" as const, id: username },
-        { type: "Tiers" as const, id: username },
-        { type: "User" as const, id: username },
-      ],
-    }),
-
-    unfollow: builder.mutation<
-      { subscribed: boolean; status: string; expiresAt: string | null },
-      { username: string }
-    >({
-      query: ({ username }) => ({
-        url: `/users/${username}/unsubscribe`,
-        method: "POST",
-      }),
-      invalidatesTags: (_r, _e, { username }) => [
-        { type: "SubscriptionStatus" as const, id: username },
-        "Subscriptions" as any,
-        { type: "Posts" as const, id: username },
-        { type: "Tiers" as const, id: username },
-        { type: "User" as const, id: username },
-      ],
-    }),
-
+ 
     unsubscribe: builder.mutation<
-      { subscribed: boolean; status: string; expiresAt: string | null },
+      { paid: SubscriptionStatus["paid"] },
       { username: string }
     >({
       query: ({ username }) => ({
@@ -138,9 +140,10 @@ export const subscriptionApi = baseApi.injectEndpoints({
         { type: "Posts" as const, id: username },
         { type: "Tiers" as const, id: username },
         { type: "User" as const, id: username },
+        "Stats" as any,
       ],
     }),
-
+ 
     getSubscriptionStatus: builder.query<
       SubscriptionStatus,
       { username: string }
@@ -154,10 +157,10 @@ export const subscriptionApi = baseApi.injectEndpoints({
       ],
     }),
   }),
-
+ 
   overrideExisting: false,
 });
-
+ 
 export const {
   useGetTiersQuery,
   useCreateTierMutation,

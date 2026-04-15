@@ -11,6 +11,7 @@ import { SearchPage } from "@pages/search";
 import { SubscriptionsPage } from "@pages/subscriptions";
 import { FeedPage } from "@pages/feed";
 import { DashboardPage } from "@pages/dashboard/ui";
+import { PayoutsPage } from "@pages/payouts";
 
 const AppRoute = () => {
   return (
@@ -54,6 +55,14 @@ const AppRoute = () => {
           element={
             <ProtectedRoute>
               <DashboardPage />
+            </ProtectedRoute>
+          }
+        ></Route>
+        <Route
+          path="/payouts"
+          element={
+            <ProtectedRoute>
+              <PayoutsPage />
             </ProtectedRoute>
           }
         ></Route>

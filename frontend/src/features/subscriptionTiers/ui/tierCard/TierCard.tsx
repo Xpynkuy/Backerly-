@@ -3,7 +3,10 @@ import styles from "./TierCard.module.scss";
 import MyButton from "@shared/ui/button/MyButton";
 import { Settings, Trash2, Users } from "lucide-react";
 import { SubscribeButton } from "../subscribeButton/SubscribeButton";
-import { useDeleteTierMutation } from "../../model/api/subscriptionApi";
+import {
+  useDeleteTierMutation,
+  useGetSubscriptionStatusQuery,
+} from "../../model/api/subscriptionApi";
 import { useTranslation } from "react-i18next";
 
 interface TierCardProps {
@@ -18,7 +21,23 @@ interface TierCardProps {
 export const TierCard = (props: TierCardProps) => {
   const { tier, isOwner, username, isCurrentTier, onEdit, onDelete } = props;
   const [deleteTier, { isLoading: isDeleting }] = useDeleteTierMutation();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+
+  const { data: subStatus } = useGetSubscriptionStatusQuery(
+    { username },
+    { skip: isOwner || !isCurrentTier },
+  );
+
+  const paid = subStatus?.paid ?? null;
+  const isCancelledCurrent =
+    !!isCurrentTier && paid?.status === "cancelled" && !!paid?.expiresAt;
+
+  const formattedExpiry = paid?.expiresAt
+    ? new Date(paid.expiresAt).toLocaleDateString(
+        i18n.language?.startsWith("ru") ? "ru-RU" : "en-US",
+        { day: "numeric", month: "long", year: "numeric" },
+      )
+    : null;
 
   const price =
     tier.priceCents != null && tier.priceCents > 0
@@ -41,8 +60,17 @@ export const TierCard = (props: TierCardProps) => {
     <div
       className={`${styles.cardContainer} ${isCurrentTier ? styles.currentTier : ""}`}
     >
-      {isCurrentTier && (
+      {isCurrentTier && !isCancelledCurrent && (
         <span className={styles.currentBadge}>{t("tier.yourTier")}</span>
+      )}
+
+      {isCancelledCurrent && (
+        <div className={styles.cancelledNotice}>
+          <strong>{t("tier.cancelledTitle")}</strong>
+          <span>
+            {t("tier.cancelledAccessUntil")} {formattedExpiry}
+          </span>
+        </div>
       )}
 
       {isOwner && (

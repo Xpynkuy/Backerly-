@@ -18,13 +18,20 @@ export interface SubscribedAuthorDto {
   avatarUrl?: string | null;
   bannerUrl?: string | null;
   description?: string | null;
-  tierId?: string | null;
-  tierTitle?: string | null;
-  tierPriceCents?: number | null;
-  status: string;
-  startDate: string;
-  expiresAt?: string | null;
-  cancelledAt?: string | null;
+  follow: {
+    active: boolean;
+    startDate: string | null;
+  };
+  paid: {
+    tierId: string;
+    tierTitle: string | null;
+    tierPriceCents: number | null;
+    status: string;
+    hasAccess: boolean;
+    startDate: string;
+    expiresAt: string | null;
+    cancelledAt: string | null;
+  } | null;
 }
 
 export interface FetchTiersByUsernameParams {
@@ -58,16 +65,25 @@ export interface DeleteTierParams {
   authUserId: string;
 }
 
-export interface SubscribeParams {
+export interface FollowAuthorParams {
   username: string;
   authUserId: string;
-  tierId?: string | null;
 }
 
-export interface UnsubscribeParams {
+export interface UnfollowAuthorParams {
   username: string;
   authUserId: string;
-  tierId?: string | null;
+}
+
+export interface SubscribeToTierParams {
+  username: string;
+  authUserId: string;
+  tierId: string;
+}
+
+export interface CancelPaidSubscriptionParams {
+  username: string;
+  authUserId: string;
 }
 
 export interface GetSubscriptionStatusParams {
@@ -89,17 +105,28 @@ export interface SubscriptionsResponse {
 }
 
 export interface SubscriptionStatusResponse {
-  subscribed: boolean;
-  followed: boolean;
-  tierId: string | null;
-  tierTitle: string | null;
-  tierPriceCents: number | null;
-  status: string | null;
-  expiresAt: string | null;
+  follow: {
+    active: boolean;
+  };
+  paid: {
+    tierId: string;
+    tierTitle: string | null;
+    tierPriceCents: number | null;
+    status: string;
+    hasAccess: boolean;
+    expiresAt: string | null;
+  } | null;
 }
 
-export interface SubscribeResponse {
-  subscribed: boolean;
-  status: string;
-  expiresAt: string | null;
+export interface FollowResponse {
+  follow: { active: boolean };
+}
+
+export interface PaidActionResponse {
+  paid: {
+    tierId: string;
+    status: string;
+    hasAccess: boolean;
+    expiresAt: string | null;
+  } | null;
 }

@@ -35,18 +35,20 @@ export const getAuthorStats = async (userId: string): Promise<AuthorStats> => {
       where: { post: { authorId: userId } },
     }),
     prisma.subscription.count({
-      where: { authorId: userId, status: "active" },
+      where: { authorId: userId, kind: "follow", status: "active" },
     }),
     prisma.subscription.count({
       where: {
         authorId: userId,
+        kind: "paid",
         status: "active",
+        expiresAt: { gt: new Date() },
         tier: { priceCents: { gt: 0 } },
       },
     }),
   ]);
 
-  const freeSubscribers = totalSubscribers - paidSubscribers;
+  const freeSubscribers = Math.max(totalSubscribers - paidSubscribers, 0);
 
   const twelveMonthsAgo = new Date();
   twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
@@ -60,7 +62,11 @@ export const getAuthorStats = async (userId: string): Promise<AuthorStats> => {
   const postsPerMonth = aggregateByMonth(posts.map((p) => p.createdAt));
 
   const subs = await prisma.subscription.findMany({
-    where: { authorId: userId, createdAt: { gte: twelveMonthsAgo } },
+    where: {
+      authorId: userId,
+      kind: "follow",
+      createdAt: { gte: twelveMonthsAgo },
+    },
     select: { createdAt: true },
     orderBy: { createdAt: "asc" },
   });
