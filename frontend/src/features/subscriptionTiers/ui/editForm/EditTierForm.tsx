@@ -1,4 +1,3 @@
-import React from "react";
 import { useForm } from "react-hook-form";
 import MyInput from "@shared/ui/input/MyInput";
 import TextArea from "@shared/ui/textArea/TextArea";
@@ -11,7 +10,6 @@ import type { SubscriptionTier } from "../../model/types/types";
 interface EditTierFormData {
   title: string;
   description: string;
-  price: string;
 }
 
 interface EditTierFormProps {
@@ -35,27 +33,22 @@ export const EditTierForm = ({
     defaultValues: {
       title: tier.title,
       description: tier.description ?? "",
-      price:
-        tier.priceCents != null && tier.priceCents > 0
-          ? String(tier.priceCents / 100)
-          : "",
     },
   });
 
   const [updateTier, { isLoading }] = useUpdateTierMutation();
   const { t } = useTranslation();
 
+  const currentPriceDisplay =
+    tier.priceCents != null && tier.priceCents > 0
+      ? `${tier.priceCents / 100} ₽`
+      : t("Free");
+
   const onSubmit = async (data: EditTierFormData) => {
     const form = new FormData();
     form.append("title", data.title.trim());
     form.append("description", data.description.trim());
-    if (data.price) {
-      const cents = Math.round(Number(data.price) * 100);
-      if (!Number.isFinite(cents) || cents <= 0) {
-        return alert(t("tier.invalidPrice"));
-      }
-      form.append("priceCents", String(cents));
-    }
+    // priceCents intentionally omitted — pricing is locked after creation
 
     try {
       await updateTier({ username, tierId: tier.id, form }).unwrap();
@@ -91,24 +84,24 @@ export const EditTierForm = ({
         error={errors.description?.message}
       />
 
-      <span className={styles.formFieldsTitle}>{t("Enter tier price")}</span>
-      <MyInput
-        {...register("price", {
-          required: t("Price is required"),
-          validate: (value) => {
-            const num = Number(value);
-            if (num <= 0) return t("Price must be greater than 0");
-            return true;
-          },
-        })}
-        error={errors.price?.message}
-      />
+      <div className={styles.priceLocked}>
+        <span className={styles.priceLockedLabel}>{t("tier.priceLabel")}</span>
+        <span className={styles.priceLockedValue}>
+          {currentPriceDisplay} / {t("per month")}
+        </span>
+        <span className={styles.priceLockedHint}>{t("tier.priceLocked")}</span>
+      </div>
 
       <div className={styles.formButtons}>
         <MyButton type="submit" disabled={isLoading}>
           {isLoading ? "..." : t("Save")}
         </MyButton>
-        <MyButton type="button" color="GRAY" onClick={onCancel} disabled={isLoading}>
+        <MyButton
+          type="button"
+          color="GRAY"
+          onClick={onCancel}
+          disabled={isLoading}
+        >
           {t("Cancel")}
         </MyButton>
       </div>

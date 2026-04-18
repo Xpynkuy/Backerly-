@@ -1,7 +1,9 @@
+import { useState } from "react";
 import type { SubscriptionTier } from "../../model/types/types";
 import styles from "./TierCard.module.scss";
 import MyButton from "@shared/ui/button/MyButton";
-import { Settings, Trash2, Users } from "lucide-react";
+import Modal from "@shared/ui/modal/Modal";
+import { Settings, Trash2, Users, AlertTriangle } from "lucide-react";
 import { SubscribeButton } from "../subscribeButton/SubscribeButton";
 import {
   useDeleteTierMutation,
@@ -22,6 +24,10 @@ export const TierCard = (props: TierCardProps) => {
   const { tier, isOwner, username, isCurrentTier, onEdit, onDelete } = props;
   const [deleteTier, { isLoading: isDeleting }] = useDeleteTierMutation();
   const { t, i18n } = useTranslation();
+
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [blockedOpen, setBlockedOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const { data: subStatus } = useGetSubscriptionStatusQuery(
     { username },
@@ -44,15 +50,33 @@ export const TierCard = (props: TierCardProps) => {
       ? `${tier.priceCents / 100}`
       : t("Free");
 
-  const handleDelete = async () => {
-    if (!confirm(t("tier.deleteConfirm"))) return;
+  const durationLabel =
+    paid?.durationMonths === 3
+      ? t("sub.duration.threeMonths")
+      : t("sub.duration.oneMonth");
 
+  const openConfirm = () => {
+    setErrorMessage(null);
+    setConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
     try {
       await deleteTier({ username, tierId: tier.id }).unwrap();
+      setConfirmOpen(false);
       onDelete?.();
-    } catch (e) {
-      console.error(e);
-      alert(t("tier.deleteFailed"));
+    } catch (err: any) {
+      console.error("delete tier failed:", err);
+      setConfirmOpen(false);
+
+      const code = err?.data?.error;
+      const status = err?.status;
+
+      if (code === "TIER_HAS_ACTIVE_SUBSCRIBERS" || status === 400) {
+        setBlockedOpen(true);
+      } else {
+        setErrorMessage(t("tier.deleteFailed"));
+      }
     }
   };
 
@@ -61,7 +85,20 @@ export const TierCard = (props: TierCardProps) => {
       className={`${styles.cardContainer} ${isCurrentTier ? styles.currentTier : ""}`}
     >
       {isCurrentTier && !isCancelledCurrent && (
-        <span className={styles.currentBadge}>{t("tier.yourTier")}</span>
+        <div className={styles.currentBlock}>
+          <span className={styles.currentBadge}>{t("tier.yourTier")}</span>
+          {paid && (
+            <span className={styles.currentMeta}>
+              {durationLabel}
+              {formattedExpiry && (
+                <>
+                  {" · "}
+                  {t("sub.renewDate")}: {formattedExpiry}
+                </>
+              )}
+            </span>
+          )}
+        </div>
       )}
 
       {isCancelledCurrent && (
@@ -70,6 +107,11 @@ export const TierCard = (props: TierCardProps) => {
           <span>
             {t("tier.cancelledAccessUntil")} {formattedExpiry}
           </span>
+          {paid && (
+            <span className={styles.cancelledMeta}>
+              {t("sub.durationLabel")}: {durationLabel}
+            </span>
+          )}
         </div>
       )}
 
@@ -87,7 +129,7 @@ export const TierCard = (props: TierCardProps) => {
               size="AUTO"
               icon={<Trash2 size={18} />}
               color="TRANSPARENT"
-              onClick={handleDelete}
+              onClick={openConfirm}
               disabled={isDeleting}
             />
           </div>
@@ -110,6 +152,10 @@ export const TierCard = (props: TierCardProps) => {
           </span>
         )}
 
+        {isOwner && errorMessage && (
+          <div className={styles.inlineError}>{errorMessage}</div>
+        )}
+
         {!isOwner && (
           <div style={{ marginTop: 8 }}>
             <SubscribeButton
@@ -120,6 +166,46 @@ export const TierCard = (props: TierCardProps) => {
           </div>
         )}
       </div>
+
+      {/* Confirm delete */}
+      <Modal isOpen={confirmOpen} onClose={() => setConfirmOpen(false)}>
+        <div className={styles.deleteModal}>
+          <h3 className={styles.deleteTitle}>{t("tier.deleteTitle")}</h3>
+          <p className={styles.deleteDesc}>
+            {t("tier.deleteConfirmText", { title: tier.title })}
+          </p>
+          <div className={styles.deleteActions}>
+            <MyButton
+              color="RED"
+              onClick={handleConfirmDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? "..." : t("Delete")}
+            </MyButton>
+            <MyButton color="GRAY" onClick={() => setConfirmOpen(false)}>
+              {t("Cancel")}
+            </MyButton>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Blocked: has active subscribers */}
+      <Modal isOpen={blockedOpen} onClose={() => setBlockedOpen(false)}>
+        <div className={styles.blockedModal}>
+          <div className={styles.blockedIcon}>
+            <AlertTriangle size={32} />
+          </div>
+          <h3 className={styles.blockedTitle}>
+            {t("tier.deleteBlockedTitle")}
+          </h3>
+          <p className={styles.blockedDesc}>
+            {t("tier.deleteBlockedDesc", { title: tier.title })}
+          </p>
+          <div className={styles.blockedActions}>
+            <MyButton size="FULL" onClick={() => setBlockedOpen(false)}>{t("OK")}</MyButton>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

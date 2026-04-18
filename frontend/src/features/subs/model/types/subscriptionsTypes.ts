@@ -14,8 +14,11 @@ export type Subscriptions = {
     tierPriceCents: number | null;
     status: string;
     hasAccess: boolean;
+    durationMonths: number;
     startDate: string;
     expiresAt: string | null;
     cancelledAt: string | null;
+    scheduledTierId: string | null;
+    scheduledTierTitle: string | null;
   } | null;
 };

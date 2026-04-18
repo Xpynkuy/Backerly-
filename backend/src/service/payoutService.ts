@@ -3,6 +3,7 @@ import { ServiceError } from "../errors/ServiceError";
 
 const COMMISSION_RATE = 0.03;
 const MIN_WITHDRAWAL_CENTS = 10000;
+const AUTO_COMPLETE_DELAY_MS = 10_000;
 
 export interface PayoutInfo {
   lifetimeGrossCents: number;
@@ -117,6 +118,19 @@ export const getPayoutInfo = async (authorId: string): Promise<PayoutInfo> => {
   };
 };
 
+function scheduleAutoComplete(withdrawalId: string): void {
+  setTimeout(async () => {
+    try {
+      await prisma.withdrawal.updateMany({
+        where: { id: withdrawalId, status: "pending" },
+        data: { status: "completed" },
+      });
+    } catch (e) {
+      console.error("Auto-complete withdrawal failed", withdrawalId, e);
+    }
+  }, AUTO_COMPLETE_DELAY_MS);
+}
+
 export const requestWithdrawal = async (
   authorId: string,
   amountCents: number,
@@ -137,12 +151,10 @@ export const requestWithdrawal = async (
     throw new ServiceError(400, "Amount exceeds available balance");
   }
 
-  // Commission is already applied to the balance; gross is reconstructed
-  // only for display consistency in the history row.
   const grossCents = Math.ceil(amountCents / (1 - COMMISSION_RATE));
   const commissionCents = grossCents - amountCents;
 
-  return prisma.withdrawal.create({
+  const withdrawal = await prisma.withdrawal.create({
     data: {
       authorId,
       grossCents,
@@ -151,4 +163,8 @@ export const requestWithdrawal = async (
       status: "pending",
     },
   });
+
+  scheduleAutoComplete(withdrawal.id);
+
+  return withdrawal;
 };

@@ -27,19 +27,15 @@ import {
   PaidActionResponse,
 } from "../types/subscriptionTypes";
 
-const SUBSCRIPTION_DURATION_DAYS = 30;
+const DAYS_PER_MONTH = 30;
+const ALLOWED_DURATIONS = [1, 3];
 
-function addDays(date: Date, days: number): Date {
+function addMonths(date: Date, months: number): Date {
   const result = new Date(date);
-  result.setDate(result.getDate() + days);
+  result.setDate(result.getDate() + DAYS_PER_MONTH * months);
   return result;
 }
 
-/**
- * Lazy cleanup: delete any paid subscriptions of this user that have expired.
- * Paid records past their expiresAt are simply removed. Follow records are
- * independent and untouched.
- */
 async function cleanupExpiredPaid(subscriberId: string): Promise<void> {
   await prisma.subscription.deleteMany({
     where: {
@@ -50,9 +46,6 @@ async function cleanupExpiredPaid(subscriberId: string): Promise<void> {
   });
 }
 
-/**
- * Same cleanup but scoped to a particular author (for profile view).
- */
 async function cleanupExpiredPaidForAuthor(
   subscriberId: string,
   authorId: string,
@@ -66,10 +59,6 @@ async function cleanupExpiredPaidForAuthor(
     },
   });
 }
-
-// ============================================================================
-// TIERS (owner-only management)
-// ============================================================================
 
 export const fetchTiersByUsername = async ({
   username,
@@ -140,6 +129,23 @@ export const createTierForUser = async ({
   if (!author) throw new NotFoundError("User not found");
   if (author.id !== authUserId) throw new ForbiddenError();
 
+  // Guard: price must be unique among this author's active tiers.
+  // The access-control logic compares tiers by priceCents, so two tiers with
+  // the same price would be ambiguous for upgrade/downgrade decisions.
+  if (priceCents !== undefined && priceCents !== null) {
+    const duplicate = await prisma.subscriptionTier.findFirst({
+      where: {
+        authorId: author.id,
+        isActive: true,
+        priceCents: Number(priceCents),
+      },
+      select: { id: true },
+    });
+    if (duplicate) {
+      throw new BadRequestError("TIER_PRICE_DUPLICATE");
+    }
+  }
+
   const imageUrl = fileBuffer ? await savePost(fileBuffer) : null;
 
   let order = sortOrder ?? 0;
@@ -170,7 +176,6 @@ export const updateTierById = async ({
   authUserId,
   title,
   description,
-  priceCents,
   sortOrder,
   fileBuffer,
 }: UpdateTierParams): Promise<TierDto> => {
@@ -199,15 +204,13 @@ export const updateTierById = async ({
     imageUrl = await savePost(fileBuffer);
   }
 
+  // priceCents is intentionally NOT updated — pricing is fixed at tier creation
+  // to keep existing subscribers' billing and access checks consistent.
   const updated = await prisma.subscriptionTier.update({
     where: { id: tierId },
     data: {
       title: title?.trim() ?? tier.title,
       description: description !== undefined ? description : tier.description,
-      priceCents:
-        priceCents !== undefined && priceCents !== null
-          ? Number(priceCents)
-          : tier.priceCents,
       sortOrder:
         sortOrder !== undefined && sortOrder !== null
           ? Number(sortOrder)
@@ -268,26 +271,51 @@ export const deleteTierById = async ({
     throw new ForbiddenError();
   }
 
+  const now = new Date();
+
+  // Guard: can't delete a tier that has active paying subscribers.
+  // Active = paid sub with access-granting status AND not-yet-expired.
+  const activeCount = await prisma.subscription.count({
+    where: {
+      tierId,
+      kind: "paid",
+      status: { in: ["active", "cancelled"] },
+      expiresAt: { gt: now },
+    },
+  });
+
+  if (activeCount > 0) {
+    throw new BadRequestError("TIER_HAS_ACTIVE_SUBSCRIBERS");
+  }
+
+  // No active subscribers — safe to delete.
+  // Clean up any paid records pointing to this tier (all are expired).
+  await prisma.subscription.deleteMany({
+    where: { tierId, kind: "paid" },
+  });
+
+  // Clear scheduled downgrades targeting this tier
+  await prisma.subscription.updateMany({
+    where: { scheduledTierId: tierId },
+    data: { scheduledTierId: null },
+  });
+
+  // Posts that used this tier become free
   await prisma.post.updateMany({
     where: { accessTierId: tierId },
     data: { isPaid: false, accessTierId: null },
   });
 
-  // Delete paid subscriptions tied to this tier. Follow records are untouched.
-  await prisma.subscription.deleteMany({
-    where: { tierId, kind: "paid" },
-  });
-
   if (tier.imageUrl) {
-    await deleteFile(tier.imageUrl);
+    try {
+      await deleteFile(tier.imageUrl);
+    } catch (e) {
+      console.error("Failed to delete tier image", e);
+    }
   }
 
   await prisma.subscriptionTier.delete({ where: { id: tierId } });
 };
-
-// ============================================================================
-// FOLLOW (free)
-// ============================================================================
 
 export const followAuthorService = async ({
   username,
@@ -353,17 +381,18 @@ export const unfollowAuthorService = async ({
   return { follow: { active: false } };
 };
 
-// ============================================================================
-// PAID SUBSCRIPTION
-// ============================================================================
-
 export const subscribeToTierService = async ({
   username,
   authUserId,
   tierId,
+  durationMonths,
 }: SubscribeToTierParams): Promise<PaidActionResponse> => {
   if (!authUserId) throw new UnauthorizedError();
   if (!tierId) throw new BadRequestError("tierId is required");
+
+  if (!ALLOWED_DURATIONS.includes(durationMonths)) {
+    throw new BadRequestError("durationMonths must be 1 or 3");
+  }
 
   const author = await prisma.user.findUnique({
     where: { username },
@@ -388,13 +417,11 @@ export const subscribeToTierService = async ({
     throw new BadRequestError("This tier is no longer available");
   }
 
-  // Clean up any expired paid record for this pair first
   await cleanupExpiredPaidForAuthor(authUserId, author.id);
 
   const now = new Date();
-  const expiresAt = addDays(now, SUBSCRIPTION_DURATION_DAYS);
 
-  // Auto-create follow record (Boosty: paying also means following)
+  // Ensure follow exists (paid implies follow)
   await prisma.subscription.upsert({
     where: {
       subscriberId_authorId_kind: {
@@ -416,8 +443,6 @@ export const subscribeToTierService = async ({
     },
   });
 
-  // Look at existing paid record to decide: first purchase, resubscribe,
-  // upgrade, or downgrade.
   const existingPaid = await prisma.subscription.findUnique({
     where: {
       subscriberId_authorId_kind: {
@@ -432,13 +457,13 @@ export const subscribeToTierService = async ({
   const hasActiveAccess =
     !!existingPaid && !!existingPaid.expiresAt && now < existingPaid.expiresAt;
 
-  let paid;
-  let paymentToCreate: { gross: number; kind: string } | null = null;
-
+  // ============================================================
+  // CASE 1: First purchase (or previous fully expired)
+  // ============================================================
   if (!hasActiveAccess) {
-    // First purchase, or previous period fully expired.
-    // Full price, fresh 30-day period.
-    paid = await prisma.subscription.upsert({
+    const expiresAt = addMonths(now, durationMonths);
+
+    const paid = await prisma.subscription.upsert({
       where: {
         subscriberId_authorId_kind: {
           subscriberId: authUserId,
@@ -451,38 +476,125 @@ export const subscribeToTierService = async ({
         authorId: author.id,
         kind: "paid",
         tierId,
+        scheduledTierId: null,
         status: "active",
+        durationMonths,
         startDate: now,
         expiresAt,
         cancelledAt: null,
       },
       update: {
         tierId,
+        scheduledTierId: null,
         status: "active",
+        durationMonths,
         startDate: now,
         expiresAt,
         cancelledAt: null,
       },
     });
-    paymentToCreate = {
-      gross: tier.priceCents ?? 0,
-      kind: "subscription",
+
+    await prisma.payment.create({
+      data: {
+        authorId: author.id,
+        subscriberId: authUserId,
+        tierId,
+        grossCents: (tier.priceCents ?? 0) * durationMonths,
+        kind: "subscription",
+      },
+    });
+
+    return {
+      paid: {
+        tierId,
+        status: paid.status,
+        hasAccess: true,
+        durationMonths: paid.durationMonths,
+        expiresAt: paid.expiresAt?.toISOString() ?? null,
+        scheduledTierId: null,
+      },
     };
-  } else if (existingPaid!.tierId === tierId) {
-    // Same tier, still within paid period — this is a resubscribe after a
-    // soft cancel. Reactivate, no payment, keep expiresAt.
-    paid = await prisma.subscription.update({
+  }
+
+  // From here: hasActiveAccess === true
+  const currentTierId = existingPaid!.tierId;
+  const oldPrice = existingPaid!.tier?.priceCents ?? 0;
+  const newPrice = tier.priceCents ?? 0;
+
+  // ============================================================
+  // CASE 2: Same tier
+  // ============================================================
+  if (currentTierId === tierId) {
+    // 2a. Cancelled but still has access — pure reactivation, no payment, no extension.
+    //     Just clear cancelled flag and any scheduled change.
+    if (existingPaid!.status === "cancelled") {
+      const paid = await prisma.subscription.update({
+        where: { id: existingPaid!.id },
+        data: {
+          status: "active",
+          cancelledAt: null,
+          scheduledTierId: null,
+        },
+      });
+
+      return {
+        paid: {
+          tierId,
+          status: paid.status,
+          hasAccess: true,
+          durationMonths: paid.durationMonths,
+          expiresAt: paid.expiresAt?.toISOString() ?? null,
+          scheduledTierId: null,
+        },
+      };
+    }
+
+    // 2b. Active renewal — pay for + extend by `durationMonths`.
+    //     Accumulate durationMonths so the prorate formula stays correct
+    //     for any future upgrade (totalDays = 30 * durationMonths matches
+    //     the real start..expiresAt window).
+    const newExpiresAt = addMonths(existingPaid!.expiresAt!, durationMonths);
+    const newTotalMonths = (existingPaid!.durationMonths ?? 1) + durationMonths;
+
+    const paid = await prisma.subscription.update({
       where: { id: existingPaid!.id },
       data: {
         status: "active",
         cancelledAt: null,
+        scheduledTierId: null,
+        durationMonths: newTotalMonths,
+        expiresAt: newExpiresAt,
       },
     });
-  } else {
-    // Different tier, still within paid period — upgrade or downgrade.
-    const oldPrice = existingPaid!.tier?.priceCents ?? 0;
-    const newPrice = tier.priceCents ?? 0;
-    const totalDays = SUBSCRIPTION_DURATION_DAYS;
+
+    await prisma.payment.create({
+      data: {
+        authorId: author.id,
+        subscriberId: authUserId,
+        tierId,
+        grossCents: newPrice * durationMonths,
+        kind: "renewal",
+      },
+    });
+
+    return {
+      paid: {
+        tierId,
+        status: paid.status,
+        hasAccess: true,
+        durationMonths: paid.durationMonths,
+        expiresAt: paid.expiresAt?.toISOString() ?? null,
+        scheduledTierId: null,
+      },
+    };
+  }
+
+  // ============================================================
+  // CASE 3: Upgrade — immediate, prorated diff against full period cost
+  // ============================================================
+  if (newPrice > oldPrice) {
+    const months = existingPaid!.durationMonths ?? 1;
+    const totalDays = DAYS_PER_MONTH * months;
     const msPerDay = 24 * 60 * 60 * 1000;
     const daysLeft = Math.max(
       Math.ceil(
@@ -491,57 +603,76 @@ export const subscribeToTierService = async ({
       0,
     );
 
-    if (newPrice > oldPrice) {
-      // Upgrade: charge prorated difference for the remaining period.
-      const unusedCreditCents = Math.floor((oldPrice * daysLeft) / totalDays);
-      const newCostCents = Math.floor((newPrice * daysLeft) / totalDays);
-      const diffCents = Math.max(newCostCents - unusedCreditCents, 0);
+    // Prorate against the FULL price of the period (price * months),
+    // not the monthly price. Otherwise the diff is under-charged by
+    // a factor of `months`.
+    const oldFullCost = oldPrice * months;
+    const newFullCost = newPrice * months;
+    const unusedCreditCents = Math.floor((oldFullCost * daysLeft) / totalDays);
+    const newCostCents = Math.floor((newFullCost * daysLeft) / totalDays);
+    const diffCents = Math.max(newCostCents - unusedCreditCents, 0);
 
-      paid = await prisma.subscription.update({
-        where: { id: existingPaid!.id },
-        data: {
-          tierId,
-          status: "active",
-          cancelledAt: null,
-          // expiresAt intentionally not touched
-        },
-      });
+    const paid = await prisma.subscription.update({
+      where: { id: existingPaid!.id },
+      data: {
+        tierId,
+        scheduledTierId: null,
+        status: "active",
+        cancelledAt: null,
+        // expiresAt, durationMonths — unchanged
+      },
+    });
 
-      if (diffCents > 0) {
-        paymentToCreate = { gross: diffCents, kind: "upgrade" };
-      }
-    } else {
-      // Downgrade: just swap the tier, no new payment, no refund.
-      // expiresAt stays the same.
-      paid = await prisma.subscription.update({
-        where: { id: existingPaid!.id },
+    if (diffCents > 0) {
+      await prisma.payment.create({
         data: {
+          authorId: author.id,
+          subscriberId: authUserId,
           tierId,
-          status: "active",
-          cancelledAt: null,
+          grossCents: diffCents,
+          kind: "upgrade",
         },
       });
     }
+
+    return {
+      paid: {
+        tierId,
+        status: paid.status,
+        hasAccess: true,
+        durationMonths: paid.durationMonths,
+        expiresAt: paid.expiresAt?.toISOString() ?? null,
+        scheduledTierId: null,
+      },
+    };
   }
 
-  if (paymentToCreate) {
-    await prisma.payment.create({
-      data: {
-        authorId: author.id,
-        subscriberId: authUserId,
-        tierId,
-        grossCents: paymentToCreate.gross,
-        kind: paymentToCreate.kind,
-      },
-    });
-  }
+  // ============================================================
+  // CASE 4: Downgrade — schedule, no immediate change
+  // ============================================================
+  // Boosty-style: current tier keeps running until expiresAt, new tier takes
+  // effect only when the user renews (manually, in this implementation).
+  // No refund, no immediate tier change.
+
+  // Edge case: user "downgraded" to a tier they don't currently have but the
+  // request happens to match an existing scheduled change. Just (re)set it.
+  // Also covers the case where currentTierId is somehow null — treat as set.
+  const paid = await prisma.subscription.update({
+    where: { id: existingPaid!.id },
+    data: {
+      scheduledTierId: tierId,
+      // tierId, expiresAt, durationMonths, status — unchanged
+    },
+  });
 
   return {
     paid: {
-      tierId,
+      tierId: paid.tierId as string, // still the old tier
       status: paid.status,
       hasAccess: true,
+      durationMonths: paid.durationMonths,
       expiresAt: paid.expiresAt?.toISOString() ?? null,
+      scheduledTierId: paid.scheduledTierId,
     },
   };
 };
@@ -556,7 +687,6 @@ export const cancelPaidSubscriptionService = async ({
     where: { username },
     select: { id: true },
   });
-
   if (!author) throw new NotFoundError("User not found");
 
   const paid = await prisma.subscription.findUnique({
@@ -569,24 +699,21 @@ export const cancelPaidSubscriptionService = async ({
     },
   });
 
-  if (!paid) {
-    return { paid: null };
-  }
+  if (!paid) return { paid: null };
 
   const now = new Date();
 
-  // If already expired — just delete
   if (paid.expiresAt && now >= paid.expiresAt) {
     await prisma.subscription.delete({ where: { id: paid.id } });
     return { paid: null };
   }
 
-  // Soft cancel — access preserved until expiresAt
   const updated = await prisma.subscription.update({
     where: { id: paid.id },
     data: {
       status: "cancelled",
       cancelledAt: now,
+      scheduledTierId: null,
     },
   });
 
@@ -595,14 +722,12 @@ export const cancelPaidSubscriptionService = async ({
       tierId: updated.tierId as string,
       status: updated.status,
       hasAccess: true,
+      durationMonths: updated.durationMonths ?? 1,
       expiresAt: updated.expiresAt?.toISOString() ?? null,
+      scheduledTierId: null,
     },
   };
 };
-
-// ============================================================================
-// STATUS
-// ============================================================================
 
 export const getSubscriptionStatusService = async ({
   username,
@@ -619,17 +744,12 @@ export const getSubscriptionStatusService = async ({
     where: { username },
     select: { id: true },
   });
-
   if (!author) throw new NotFoundError("User not found");
 
-  // Lazy cleanup of expired paid subs for this pair
   await cleanupExpiredPaidForAuthor(authUserId, author.id);
 
   const records = await prisma.subscription.findMany({
-    where: {
-      subscriberId: authUserId,
-      authorId: author.id,
-    },
+    where: { subscriberId: authUserId, authorId: author.id },
     include: {
       tier: { select: { id: true, title: true, priceCents: true } },
     },
@@ -649,13 +769,25 @@ export const getSubscriptionStatusService = async ({
           now < paidRec.expiresAt)) &&
       (!paidRec.expiresAt || now < paidRec.expiresAt);
 
+    let scheduledTierTitle: string | null = null;
+    if (paidRec.scheduledTierId) {
+      const schedTier = await prisma.subscriptionTier.findUnique({
+        where: { id: paidRec.scheduledTierId },
+        select: { title: true },
+      });
+      scheduledTierTitle = schedTier?.title ?? null;
+    }
+
     paid = {
       tierId: paidRec.tierId,
       tierTitle: paidRec.tier?.title ?? null,
       tierPriceCents: paidRec.tier?.priceCents ?? null,
       status: paidRec.status,
       hasAccess,
+      durationMonths: paidRec.durationMonths ?? 1,
       expiresAt: paidRec.expiresAt?.toISOString() ?? null,
+      scheduledTierId: paidRec.scheduledTierId ?? null,
+      scheduledTierTitle,
     };
   }
 
@@ -664,10 +796,6 @@ export const getSubscriptionStatusService = async ({
     paid,
   };
 };
-
-// ============================================================================
-// LIST SUBSCRIPTIONS (for /subscriptions page)
-// ============================================================================
 
 export const fetchSubscriptionsByUsername = async ({
   username,
@@ -683,7 +811,6 @@ export const fetchSubscriptionsByUsername = async ({
     throw new ForbiddenError("You can only view your own subscriptions");
   }
 
-  // Lazy cleanup of expired paid subs for this user
   await cleanupExpiredPaid(user.id);
 
   const records = await prisma.subscription.findMany({
@@ -699,13 +826,25 @@ export const fetchSubscriptionsByUsername = async ({
           description: true,
         },
       },
-      tier: {
-        select: { id: true, title: true, priceCents: true },
-      },
+      tier: { select: { id: true, title: true, priceCents: true } },
     },
   });
 
-  // Group by author
+  // Preload scheduled tier titles in one query
+  const scheduledIds = records
+    .filter((r) => r.kind === "paid" && r.scheduledTierId)
+    .map((r) => r.scheduledTierId!) as string[];
+
+  const scheduledTiers = scheduledIds.length
+    ? await prisma.subscriptionTier.findMany({
+        where: { id: { in: scheduledIds } },
+        select: { id: true, title: true },
+      })
+    : [];
+  const scheduledTitleById = new Map<string, string>(
+    scheduledTiers.map((t) => [t.id, t.title]),
+  );
+
   const byAuthor = new Map<
     string,
     {
@@ -742,9 +881,14 @@ export const fetchSubscriptionsByUsername = async ({
                   !!paid.expiresAt &&
                   now < paid.expiresAt)) &&
               (!paid.expiresAt || now < paid.expiresAt),
+            durationMonths: paid.durationMonths ?? 1,
             startDate: paid.startDate.toISOString(),
             expiresAt: paid.expiresAt?.toISOString() ?? null,
             cancelledAt: paid.cancelledAt?.toISOString() ?? null,
+            scheduledTierId: paid.scheduledTierId ?? null,
+            scheduledTierTitle: paid.scheduledTierId
+              ? (scheduledTitleById.get(paid.scheduledTierId) ?? null)
+              : null,
           }
         : null;
 

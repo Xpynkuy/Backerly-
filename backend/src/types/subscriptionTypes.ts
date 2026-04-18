@@ -28,9 +28,12 @@ export interface SubscribedAuthorDto {
     tierPriceCents: number | null;
     status: string;
     hasAccess: boolean;
+    durationMonths: number;
     startDate: string;
     expiresAt: string | null;
     cancelledAt: string | null;
+    scheduledTierId: string | null;
+    scheduledTierTitle: string | null;
   } | null;
 }
 
@@ -79,6 +82,7 @@ export interface SubscribeToTierParams {
   username: string;
   authUserId: string;
   tierId: string;
+  durationMonths: number;
 }
 
 export interface CancelPaidSubscriptionParams {
@@ -114,7 +118,10 @@ export interface SubscriptionStatusResponse {
     tierPriceCents: number | null;
     status: string;
     hasAccess: boolean;
+    durationMonths: number;
     expiresAt: string | null;
+    scheduledTierId: string | null;
+    scheduledTierTitle: string | null;
   } | null;
 }
 
@@ -127,6 +134,8 @@ export interface PaidActionResponse {
     tierId: string;
     status: string;
     hasAccess: boolean;
+    durationMonths: number;
     expiresAt: string | null;
+    scheduledTierId: string | null;
   } | null;
 }

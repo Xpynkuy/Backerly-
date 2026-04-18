@@ -14,7 +14,7 @@
     align-items: center;
     width: fit-content;
     gap: 6px;
-    padding: 3px;
+    padding: 3px 8px;
     background: var(--bg-color-gray);
     border-radius: var(--border-radius);
     font: var(--font-extraSmall);
@@ -57,30 +57,96 @@
     min-width: 0;
   }
 
+  .descLocked {
+    font: var(--font-s);
+    padding: 12px;
+    border: 1px dashed var(--gray-color);
+    border-radius: var(--border-radius);
+    background: var(--bg-color-gray);
+    color: var(--text-color-gray);
+    text-align: center;
+  }
+
   .mediaWrapper {
     position: relative;
+    width: 100%;
+    min-height: 120px;
+    border-radius: var(--border-radius);
+    overflow: hidden;
   }
+
   .image {
     width: 100%;
     height: auto;
     border-radius: var(--border-radius);
     display: block;
+    transition: filter 0.2s;
   }
+
+  .imageLocked {
+    filter: blur(14px) brightness(0.75) saturate(0.8);
+    transform: scale(1.05);
+  }
+
+  .imagePlaceholder {
+    width: 100%;
+    height: 260px;
+    background: linear-gradient(
+      135deg,
+      var(--bg-color-gray) 0%,
+      var(--gray-color) 100%
+    );
+  }
+
   .lockOverlay {
     position: absolute;
     inset: 0;
     display: flex;
-    align-items: end;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.35);
-    backdrop-filter: blur(4px);
+    gap: 8px;
+    padding: 16px;
+    background: rgba(20, 20, 30, 0.55);
+    color: #fff;
+    text-align: center;
     border-radius: var(--border-radius);
+    backdrop-filter: blur(2px);
   }
 
-  .descBlur {
-    color: #333;
-    filter: blur(4px);
-    user-select: none;
+  .lockIconBox {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    color: #fff;
+    margin-bottom: 4px;
+  }
+
+  .lockTitle {
+    font: var(--font-m);
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .lockDesc {
+    font: var(--font-s);
+    opacity: 0.9;
+    max-width: 360px;
+    line-height: 1.3;
+  }
+
+  .lockTier {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 4px 10px;
+    border-radius: var(--border-radius);
+    background: rgba(255, 255, 255, 0.15);
+    font: var(--font-extraSmall);
   }
 
   .slot {
@@ -90,6 +156,56 @@
     .actions {
       display: flex;
       justify-content: space-between;
+    }
+  }
+}
+
+.containerLocked {
+  border-color: var(--primary-color);
+}
+
+/* ---------------- Responsive ---------------- */
+
+@media (max-width: 600px) {
+  .container {
+    .lockIconBox {
+      width: 44px;
+      height: 44px;
+    }
+
+    .lockTitle {
+      font: var(--font-s);
+      font-weight: 700;
+    }
+
+    .lockDesc {
+      font: var(--font-extraSmall);
+    }
+
+    .imagePlaceholder {
+      height: 200px;
+    }
+  }
+}
+
+@media (max-width: 400px) {
+  .container {
+    .lockOverlay {
+      padding: 12px 10px;
+      gap: 6px;
+    }
+
+    .lockIconBox {
+      width: 36px;
+      height: 36px;
+    }
+
+    .lockTier {
+      font-size: 10px;
+    }
+
+    .imagePlaceholder {
+      height: 160px;
     }
   }
 }

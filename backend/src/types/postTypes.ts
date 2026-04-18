@@ -71,6 +71,7 @@ export interface AddCommentParams {
 
 export interface GetCommentsParams {
   postId: string;
+  authUserId?: string | null;
 }
 
 export interface PaginatedResponse<T> {

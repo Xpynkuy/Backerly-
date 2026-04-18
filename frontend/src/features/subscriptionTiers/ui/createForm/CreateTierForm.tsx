@@ -1,4 +1,3 @@
-import React from "react";
 import { useForm } from "react-hook-form";
 import MyInput from "@shared/ui/input/MyInput";
 import TextArea from "@shared/ui/textArea/TextArea";
@@ -24,6 +23,7 @@ export const CreateTierForm = ({
     register,
     handleSubmit,
     reset,
+    setError,
     formState: { errors },
   } = useForm<CreateTierFormData>({
     defaultValues: {
@@ -34,17 +34,30 @@ export const CreateTierForm = ({
   });
 
   const [createTier, { isLoading }] = useCreateTierMutation();
-  const {t} = useTranslation()
+  const { t } = useTranslation();
 
   const onSubmit = async (data: CreateTierFormData) => {
-    if (!data.title.trim()) return alert("Title is required");
+    if (!data.title.trim()) {
+      setError("title", {
+        type: "manual",
+        message: t("Title is required"),
+      });
+      return;
+    }
 
     const form = new FormData();
     form.append("title", data.title.trim());
     form.append("description", data.description.trim());
+
     if (data.price) {
       const cents = Math.round(Number(data.price) * 100);
-      if (!Number.isFinite(cents)) return alert("Invalid price");
+      if (!Number.isFinite(cents)) {
+        setError("price", {
+          type: "manual",
+          message: t("tier.invalidPrice"),
+        });
+        return;
+      }
       form.append("priceCents", String(cents));
     }
 
@@ -54,13 +67,27 @@ export const CreateTierForm = ({
       reset();
     } catch (err: any) {
       console.error("create tier failed", err);
-      alert(err?.data?.error || err?.message || "Create tier failed");
+      const code = err?.data?.error;
+
+      if (code === "TIER_PRICE_DUPLICATE") {
+        setError("price", {
+          type: "manual",
+          message: t("tier.priceDuplicate"),
+        });
+      } else {
+        // Fallback generic error surfaced near the title field
+        setError("title", {
+          type: "manual",
+          message: err?.data?.error || err?.message || t("tier.createFailed"),
+        });
+      }
     }
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
       <h4 className={styles.title}>{t("Create subscription tier")}</h4>
+
       <span className={styles.formFieldsTitle}>{t("Enter tier title")}</span>
       <MyInput
         {...register("title", {
@@ -72,12 +99,16 @@ export const CreateTierForm = ({
         })}
         error={errors.title?.message}
       />
-      <span className={styles.formFieldsTitle}>{t("Enter tier description")}</span>
+
+      <span className={styles.formFieldsTitle}>
+        {t("Enter tier description")}
+      </span>
       <TextArea
         {...register("description")}
         width="100%"
         error={errors.description?.message}
       />
+
       <span className={styles.formFieldsTitle}>{t("Enter tier price")}</span>
       <MyInput
         {...register("price", {
@@ -93,13 +124,9 @@ export const CreateTierForm = ({
 
       <div className={styles.formButtons}>
         <MyButton type="submit" disabled={isLoading}>
-          {isLoading ? "Creating..." : t("Create tier")}
+          {isLoading ? "..." : t("Create tier")}
         </MyButton>
-        <MyButton
-          type="button"
-          onClick={() => reset()}
-          disabled={isLoading}
-        >
+        <MyButton type="button" onClick={() => reset()} disabled={isLoading}>
           {t("Reset")}
         </MyButton>
       </div>

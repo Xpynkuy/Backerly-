@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useGetMeQuery } from "@features/auth/model/api/authApi";
@@ -9,20 +9,33 @@ import {
 import Loader from "@shared/ui/loader/Loader";
 import MyButton from "@shared/ui/button/MyButton";
 import Modal from "@shared/ui/modal/Modal";
-import { Wallet, TrendingUp, Users } from "lucide-react";
+import { Wallet, TrendingUp } from "lucide-react";
 import styles from "./PayoutsPage.module.scss";
 
 export const PayoutsPage = () => {
   const { data: me, isLoading: isMeLoading } = useGetMeQuery();
-  const { data, isLoading, isError } = useGetPayoutInfoQuery(undefined, {
-    skip: !me?.isCreator,
-  });
+  const { data, isLoading, isError, refetch } = useGetPayoutInfoQuery(
+    undefined,
+    { skip: !me?.isCreator },
+  );
   const [requestWithdrawal, { isLoading: isWithdrawing }] =
     useRequestWithdrawalMutation();
   const { t, i18n } = useTranslation();
   const [modalOpen, setModalOpen] = useState(false);
   const [amountInput, setAmountInput] = useState("");
   const [toast, setToast] = useState<string | null>(null);
+
+  const autoRefetchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  useEffect(() => {
+    return () => {
+      if (autoRefetchTimerRef.current) {
+        clearTimeout(autoRefetchTimerRef.current);
+      }
+    };
+  }, []);
 
   if (isMeLoading) return <Loader />;
   if (me && !me.isCreator) return <Navigate to="/" replace />;
@@ -58,6 +71,15 @@ export const PayoutsPage = () => {
       setModalOpen(false);
       setToast(t("payouts.toast.success"));
       setTimeout(() => setToast(null), 4000);
+
+      // Backend auto-completes the withdrawal after 10s.
+      // Refetch just after that to reflect the new status.
+      if (autoRefetchTimerRef.current) {
+        clearTimeout(autoRefetchTimerRef.current);
+      }
+      autoRefetchTimerRef.current = setTimeout(() => {
+        refetch();
+      }, 10_500);
     } catch (e: any) {
       setModalOpen(false);
       setToast(e?.data?.error || t("payouts.toast.failed"));

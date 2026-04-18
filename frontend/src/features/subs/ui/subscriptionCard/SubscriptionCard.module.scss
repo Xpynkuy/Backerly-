@@ -5,20 +5,20 @@
   gap: 16px;
   display: flex;
   flex-direction: column;
- 
+
   .cardHeader {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     gap: 12px;
- 
+
     .badges {
       display: flex;
       flex-direction: column;
       align-items: flex-end;
       gap: 6px;
     }
- 
+
     .statusBadge {
       display: inline-flex;
       align-items: center;
@@ -29,35 +29,35 @@
       font-weight: 600;
       white-space: nowrap;
     }
- 
+
     .statusFollowing {
       background: var(--primary-color);
       color: var(--text-color-white);
     }
- 
+
     .statusActive {
       background: var(--green-color);
       color: var(--text-color-white);
     }
- 
+
     .statusCancelled {
       background: #f0ad4e;
       color: var(--text-color-white);
     }
   }
- 
+
   .info {
     display: flex;
     flex-direction: column;
     gap: 12px;
- 
+
     .name {
       color: var(--text-color-black);
       font: var(--font-m);
       text-decoration: none;
       font-weight: 600;
     }
- 
+
     .section {
       display: flex;
       flex-direction: column;
@@ -66,7 +66,7 @@
       border: 1px solid var(--gray-color);
       border-radius: var(--border-radius);
       background: var(--bg-color-gray, rgba(0, 0, 0, 0.02));
- 
+
       .sectionTitle {
         display: flex;
         align-items: center;
@@ -75,19 +75,19 @@
         color: var(--text-color-black);
         font-weight: 500;
       }
- 
+
       .sectionActions {
         display: flex;
         gap: 8px;
         margin-top: 4px;
       }
     }
- 
+
     .expiry {
       font: var(--font-extraSmall);
       color: var(--text-color-gray);
     }
- 
+
     .cancelledNotice {
       display: flex;
       align-items: flex-start;
@@ -97,27 +97,67 @@
       border: 1px solid rgba(240, 173, 78, 0.5);
       border-radius: var(--border-radius);
       color: #b36b00;
- 
+
       svg {
         flex-shrink: 0;
         margin-top: 2px;
       }
- 
+
       .cancelledText {
         display: flex;
         flex-direction: column;
         gap: 2px;
- 
+
         strong {
           font: var(--font-s);
           color: #b36b00;
         }
- 
+
         span {
           font: var(--font-extraSmall);
           color: var(--text-color-gray);
         }
       }
     }
+
+    .scheduledNotice {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 12px;
+      background: rgba(114, 114, 209, 0.10);
+      border: 1px solid rgba(114, 114, 209, 0.45);
+      border-radius: var(--border-radius);
+      color: var(--primary-color);
+
+      svg {
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+
+      .scheduledText {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+
+        strong {
+          font: var(--font-s);
+          color: var(--primary-color);
+        }
+
+        span {
+          font: var(--font-extraSmall);
+          color: var(--text-color-gray);
+        }
+      }
+    }
+  }
+
+  .duration {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font: var(--font-extraSmall);
+    color: var(--text-color-gray);
   }
 }

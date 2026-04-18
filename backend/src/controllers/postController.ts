@@ -86,13 +86,9 @@ export const deletePost = async (
 ) => {
   try {
     const authUserId = getAuthUserId(req);
-
-    if (!authUserId) {
-      throw new UnauthorizedError();
-    }
+    if (!authUserId) throw new UnauthorizedError();
 
     const postId = req.params.id;
-
     await deletePostById({ postId, authUserId });
 
     return res.status(204).send();
@@ -108,13 +104,9 @@ export const toggleLike = async (
 ) => {
   try {
     const authUserId = getAuthUserId(req);
-
-    if (!authUserId) {
-      throw new UnauthorizedError();
-    }
+    if (!authUserId) throw new UnauthorizedError();
 
     const postId = req.params.id;
-
     const result = await toggleLikeForPost({ postId, authUserId });
 
     return res.json(result);
@@ -130,7 +122,11 @@ export const getComments = async (
 ) => {
   try {
     const postId = req.params.id;
-    const items = await getCommentsForPost({ postId });
+    const authUserId = getAuthUserId(req);
+    const items = await getCommentsForPost({
+      postId,
+      authUserId: authUserId ?? null,
+    });
 
     return res.json({ items });
   } catch (error) {
@@ -145,10 +141,7 @@ export const addComment = async (
 ) => {
   try {
     const authUserId = getAuthUserId(req);
-
-    if (!authUserId) {
-      throw new UnauthorizedError();
-    }
+    if (!authUserId) throw new UnauthorizedError();
 
     const postId = req.params.id;
     const { text } = req.body;

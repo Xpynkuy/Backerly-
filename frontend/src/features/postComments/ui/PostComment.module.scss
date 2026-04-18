@@ -1,9 +1,30 @@
+.btnText {
+  font: var(--font-s);
+  color: var(--primary-color);
+}
+
 .commentContainer {
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--gray-color);
+  gap: 16px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--gray-color);
+}
+
+.lockedNotice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border: 1px dashed var(--gray-color);
   border-radius: var(--border-radius);
-  gap: 20px;
-  margin: 10px 0px;
-  padding: 10px;
+  background: var(--bg-color-gray);
+  color: var(--text-color-gray);
+  font: var(--font-s);
+
+  svg {
+    flex-shrink: 0;
+    color: var(--primary-color);
+  }
 }

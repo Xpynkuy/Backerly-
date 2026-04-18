@@ -4,40 +4,46 @@ import { useTranslation } from "react-i18next";
 import MyButton from "@shared/ui/button/MyButton";
 import Avatar from "@shared/ui/avatar/Avatar";
 import Loader from "@shared/ui/loader/Loader";
-import { AlertCircle, UserCheck, CreditCard } from "lucide-react";
+import {
+  AlertCircle,
+  UserCheck,
+  CreditCard,
+  Calendar,
+  ArrowDownCircle,
+} from "lucide-react";
 import styles from "./SubscriptionCard.module.scss";
 import {
   useUnsubscribeMutation,
   useSubscribeMutation,
   useUnfollowMutation,
 } from "@features/subscriptionTiers/model/api/subscriptionApi";
- 
+
 const API_ORIGIN = import.meta.env.VITE_API_ORIGIN || "http://localhost:5001";
- 
+
 interface SubscriptionCardProps {
   item: Subscriptions;
   onChanged?: () => void;
 }
- 
+
 export const SubscriptionCard = (props: SubscriptionCardProps) => {
   const { item, onChanged } = props;
   const [unsubscribe, { isLoading: isUnsubLoading }] = useUnsubscribeMutation();
   const [subscribe, { isLoading: isSubLoading }] = useSubscribeMutation();
   const [unfollow, { isLoading: isUnfollowLoading }] = useUnfollowMutation();
   const { t, i18n } = useTranslation();
- 
+
   const isLoading = isUnsubLoading || isSubLoading || isUnfollowLoading;
- 
+
   const avatar = item.avatarUrl
     ? `${API_ORIGIN}${item.avatarUrl}`
     : "/default_avatar.png";
- 
+
   const paid = item.paid;
   const isFollowActive = item.follow.active;
- 
+
   const isPaidActive = paid?.status === "active";
   const isPaidCancelled = paid?.status === "cancelled";
- 
+
   const dateLocale = i18n.language?.startsWith("ru") ? "ru-RU" : "en-US";
   const formatDate = (iso: string | null) =>
     iso
@@ -47,12 +53,17 @@ export const SubscriptionCard = (props: SubscriptionCardProps) => {
           year: "numeric",
         })
       : null;
- 
+
   const priceDisplay =
     paid?.tierPriceCents != null && paid.tierPriceCents > 0
       ? `${paid.tierPriceCents / 100} ₽`
       : t("Free");
- 
+
+  const durationLabel =
+    paid?.durationMonths === 3
+      ? t("sub.duration.threeMonths")
+      : t("sub.duration.oneMonth");
+
   const handleUnsubscribe = async () => {
     try {
       await unsubscribe({ username: item.username }).unwrap();
@@ -61,20 +72,21 @@ export const SubscriptionCard = (props: SubscriptionCardProps) => {
       console.error("Unsubscribe failed", e);
     }
   };
- 
+
   const handleRenew = async () => {
     if (!paid?.tierId) return;
     try {
       await subscribe({
         username: item.username,
         tierId: paid.tierId,
+        durationMonths: (paid.durationMonths as 1 | 3) ?? 1,
       }).unwrap();
       onChanged?.();
     } catch (e) {
       console.error("Renew failed", e);
     }
   };
- 
+
   const handleUnfollow = async () => {
     try {
       await unfollow({ username: item.username }).unwrap();
@@ -83,7 +95,7 @@ export const SubscriptionCard = (props: SubscriptionCardProps) => {
       console.error("Unfollow failed", e);
     }
   };
- 
+
   return (
     <div className={styles.cardContainer}>
       <div className={styles.cardHeader}>
@@ -106,13 +118,12 @@ export const SubscriptionCard = (props: SubscriptionCardProps) => {
           )}
         </div>
       </div>
- 
+
       <div className={styles.info}>
         <Link to={`/profile/${item.username}`} className={styles.name}>
           {item.username}
         </Link>
- 
-        {/* Follow section */}
+
         {isFollowActive && (
           <div className={styles.section}>
             <div className={styles.sectionTitle}>
@@ -131,8 +142,7 @@ export const SubscriptionCard = (props: SubscriptionCardProps) => {
             </div>
           </div>
         )}
- 
-        {/* Paid section */}
+
         {paid && (
           <div className={styles.section}>
             <div className={styles.sectionTitle}>
@@ -141,13 +151,37 @@ export const SubscriptionCard = (props: SubscriptionCardProps) => {
                 {paid.tierTitle} — {priceDisplay} / {t("per month")}
               </span>
             </div>
- 
+
+            <div className={styles.duration}>
+              <Calendar size={14} />
+              <span>
+                {t("sub.durationLabel")}: {durationLabel}
+              </span>
+            </div>
+
             {isPaidActive && paid.expiresAt && (
               <div className={styles.expiry}>
                 {t("sub.renewDate")}: {formatDate(paid.expiresAt)}
               </div>
             )}
- 
+
+            {isPaidActive &&
+              paid.scheduledTierId &&
+              paid.scheduledTierTitle && (
+                <div className={styles.scheduledNotice}>
+                  <ArrowDownCircle size={18} />
+                  <div className={styles.scheduledText}>
+                    <strong>{t("sub.scheduledLabel")}</strong>
+                    <span>
+                      {t("sub.scheduledDowngrade", {
+                        tier: paid.scheduledTierTitle,
+                        date: formatDate(paid.expiresAt) ?? "",
+                      })}
+                    </span>
+                  </div>
+                </div>
+              )}
+
             {isPaidCancelled && paid.expiresAt && (
               <div className={styles.cancelledNotice}>
                 <AlertCircle size={18} />
@@ -159,7 +193,7 @@ export const SubscriptionCard = (props: SubscriptionCardProps) => {
                 </div>
               </div>
             )}
- 
+
             <div className={styles.sectionActions}>
               {isPaidActive && (
                 <MyButton

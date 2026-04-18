@@ -20,11 +20,13 @@ export interface AuthorStats {
 }
 
 export const getAuthorStats = async (userId: string): Promise<AuthorStats> => {
+  const now = new Date();
+
   const [
     totalPosts,
     totalLikes,
     totalComments,
-    totalSubscribers,
+    totalFollowers,
     paidSubscribers,
   ] = await Promise.all([
     prisma.post.count({ where: { authorId: userId } }),
@@ -41,14 +43,24 @@ export const getAuthorStats = async (userId: string): Promise<AuthorStats> => {
       where: {
         authorId: userId,
         kind: "paid",
-        status: "active",
-        expiresAt: { gt: new Date() },
-        tier: { priceCents: { gt: 0 } },
+        OR: [
+          { status: "active" },
+          {
+            AND: [
+              { status: "cancelled" },
+              { expiresAt: { gt: now } },
+            ],
+          },
+        ],
+        expiresAt: { gt: now },
       },
     }),
   ]);
 
-  const freeSubscribers = Math.max(totalSubscribers - paidSubscribers, 0);
+  // Free subscribers = all followers. Paying users always have a follow row,
+  // so they are intentionally counted in both Free and Paid metrics.
+  const freeSubscribers = totalFollowers;
+  const totalSubscribers = totalFollowers;
 
   const twelveMonthsAgo = new Date();
   twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);

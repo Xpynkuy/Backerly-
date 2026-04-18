@@ -114,19 +114,21 @@ model SubscriptionTier {
 }
 
 model Subscription {
-  id           String            @id @default(cuid())
-  subscriberId String
-  subscriber   User              @relation("subscriber_subscriptions", fields: [subscriberId], references: [id], onDelete: Cascade)
-  authorId     String
-  author       User              @relation("author_subscriptions", fields: [authorId], references: [id], onDelete: Cascade)
-  tierId       String?
-  tier         SubscriptionTier? @relation(fields: [tierId], references: [id], onDelete: SetNull)
-  kind         String            @default("follow")
-  status       String            @default("active")
-  startDate    DateTime          @default(now())
-  expiresAt    DateTime?
-  cancelledAt  DateTime?
-  createdAt    DateTime          @default(now())
+  id              String            @id @default(cuid())
+  subscriberId    String
+  subscriber      User              @relation("subscriber_subscriptions", fields: [subscriberId], references: [id], onDelete: Cascade)
+  authorId        String
+  author          User              @relation("author_subscriptions", fields: [authorId], references: [id], onDelete: Cascade)
+  tierId          String?
+  tier            SubscriptionTier? @relation(fields: [tierId], references: [id], onDelete: SetNull)
+  scheduledTierId String?
+  kind            String            @default("follow")
+  status          String            @default("active")
+  durationMonths  Int               @default(1)
+  startDate       DateTime          @default(now())
+  expiresAt       DateTime?
+  cancelledAt     DateTime?
+  createdAt       DateTime          @default(now())
 
   @@unique([subscriberId, authorId, kind])
   @@index([authorId])

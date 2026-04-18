@@ -83,6 +83,7 @@ export const FeedPage = memo(() => {
                     username={post.author.username}
                     postId={post.id}
                     locale={locale}
+                    locked={post.locked}
                   />
                 }
               />

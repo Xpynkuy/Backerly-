@@ -136,6 +136,7 @@ export const PostsWidget = memo((props: PostWidgetProps) => {
                 username={username}
                 postId={post.id}
                 locale={locale}
+                locked={post.locked}
               />
             }
           />
